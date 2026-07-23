@@ -1,0 +1,74 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: waf-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: waf_target_2026
+      MYSQL_DATABASE: waf_lab
+      MYSQL_USER: labuser
+      MYSQL_PASSWORD: labpass_2026
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db_data:/var/lib/mysql
+    networks:
+      - waf-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: waf-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./app:/var/www/html
+      - ./flags/flag.txt:/flag.txt:ro
+      - logs_volume:/var/log/waf
+    networks:
+      - waf-net
+    environment:
+      DB_HOST: db
+      DB_USER: labuser
+      DB_PASS: labpass_2026
+      DB_NAME: waf_lab
+
+  waf:
+    image: owasp/modsecurity-crs:apache
+    container_name: waf-proxy
+    restart: unless-stopped
+    ports:
+      - "8090:8080"
+    depends_on:
+      - app
+    environment:
+      PORT: "8080"
+      PARANOIA: "4"
+      ANOMALY_INBOUND: "5"
+      ANOMALY_OUTBOUND: "4"
+      BACKEND: "http://app:80"
+      MODSEC_AUDIT_LOG: "/var/log/modsecurity/audit.log"
+      MODSEC_AUDIT_ENGINE: "On"
+    volumes:
+      - ./waf/Z-custom-rules.conf:/etc/modsecurity.d/owasp-crs/rules/Z-custom-rules.conf
+      - ./waf/REQUEST-945-CUSTOM-HEADERS.conf:/etc/modsecurity.d/owasp-crs/rules/REQUEST-945-CUSTOM-HEADERS.conf
+      - ./waf/httpd-modsecurity.conf:/usr/local/apache2/conf/extra/httpd-modsecurity.conf
+      - ./waf/error:/usr/local/apache2/htdocs/error
+      - logs_volume:/var/log/modsecurity
+    networks:
+      - waf-net
+
+networks:
+  waf-net:
+    driver: bridge
+
+volumes:
+  db_data:
+  logs_volume:

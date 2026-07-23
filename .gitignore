@@ -1,0 +1,26 @@
+# Docker
+db_data/
+
+# Logs & Reports (generated at runtime)
+logs/*
+reports/*
+!logs/.gitkeep
+!reports/.gitkeep
+
+# Uploaded files (runtime)
+app/uploads/*
+!app/uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
