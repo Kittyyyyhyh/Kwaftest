@@ -37,34 +37,14 @@ def step_probe(scenario, force=False):
     return probe_run(scenario, CACHE)
 
 
-def step_prune(probes):
-    """阶段二: 剪枝"""
-    from lib.prune import analyze_prune
-    result = analyze_prune(probes)
-    print(f"[prune] 技法 {result['total_cells']//len(probes) if probes else 0}→{len(result['pruned_matrix']) if result['pruned_matrix'] else 0}")
-    print(f"        删行: {result['removed_techniques'] or '无'}")
-    print(f"        删列: {result['removed_targets'] or '无'}")
-    print(f"        节省: {result['total_cells']}→{result['kept_cells']} ({100-round(result['kept_cells']/result['total_cells']*100) if result['total_cells'] else 0}%)")
-    return result
-
-
 def step_generate(scenario, quick=False):
-    """阶段三: 生成(带剪枝)"""
+    """阶段二: 生成全矩阵"""
     print(f"[generate] 生成 {scenario} 矩阵...")
-    # 调用 generate_matrix.py 的逻辑
     sys.path.insert(0, BASE)
     from scripts.generate_matrix import _generate_from, load_json_file
 
     techs = load_json_file(os.path.join(BASE, "samples", "techniques", f"{scenario}.json"))
     targets = load_json_file(os.path.join(BASE, "samples", "targets", f"{scenario}.json"))
-
-    # 如果有缓存，先剪枝
-    if os.path.exists(CACHE):
-        probes = json.load(open(CACHE, encoding="utf-8"))
-        from scripts.generate_matrix import apply_prune
-        keep_techs, keep_targets, _, _ = apply_prune(techs, targets, probes)
-        techs = keep_techs
-        targets = keep_targets
 
     samples, cells = _generate_from(techs, targets, scenario, waf="on", quick=quick)
     os.makedirs(os.path.dirname(LATEST_BATCH), exist_ok=True)
@@ -122,19 +102,16 @@ def main():
     if args.probe_only:
         return
 
-    # 2. 剪枝
-    prune_result = step_prune(probes)
-
-    # 3. 生成
+    # 2. 生成
     batch_path = step_generate(args.scenario, quick=args.quick)
     if args.skip_execute:
         print(f"\n[skip] 跳过执行. 样本: {batch_path}")
         return
 
-    # 4. 执行
+    # 3. 执行
     result_path = step_execute(batch_path)
 
-    # 5. 报告
+    # 4. 报告
     step_report(result_path)
 
     print(f"\n总耗时: {time.time()-t0:.0f}s")
