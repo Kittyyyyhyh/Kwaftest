@@ -232,6 +232,37 @@ def generate_samples(seeds: list[Seed], recipes: list[EncodingRecipe],
     return samples
 
 
+def generate_probes(seeds, waf="on"):
+    """只生成明文无编码的探针样本：技法×目标（省去编码维度）"""
+    from lib.models import Sample
+    samples = []
+    for seed in seeds:
+        transport = auto_select_transport(seed, [])
+        if seed.scenario == "upload":
+            transport = "upload_direct" if waf == "off" else "upload_waf"
+        s = Sample(
+            sample_id=f"{seed.id}__probe",
+            seed_id=seed.id,
+            scenario=seed.scenario, level=seed.level,
+            category=seed.category,
+            encoding_ids=[],
+            applied_payload=seed.payload,
+            transport=transport,
+            http_method=seed.http_method,
+            http_target=resolve_target(seed.scenario, seed.level),
+            url_params=seed.url_params,
+            expected_flag_pattern=seed.verify_pattern,
+            verify_type=getattr(seed, 'verify_type', 'honeytoken'),
+            verify_pattern=seed.verify_pattern,
+            waf=waf,
+            filename=seed.filename,
+            content_type=seed.content_type,
+            extra_fields=seed.extra_fields,
+        )
+        samples.append(s.to_dict())
+    return samples
+
+
 def main():
     parser = argparse.ArgumentParser(description="WAF样本生成器")
     parser.add_argument("--seeds", default=SEEDS_DIR, help="种子目录")
@@ -243,6 +274,7 @@ def main():
     parser.add_argument("--waf", default="on", choices=["on", "off"], help="WAF开关")
     parser.add_argument("--nested-depth", type=int, default=0, help="嵌套编码深度 (0=单层, 1=双层)")
     parser.add_argument("--quick", action="store_true", help="快速模式（精选种子×精选编码）")
+    parser.add_argument("--probe-only", action="store_true", help="只生成探针样本（无编码, 技法×目标全组合）")
     args = parser.parse_args()
 
     # 默认输出
@@ -264,9 +296,12 @@ def main():
         print(f"   [{r.id}] {r.name} (nestable={r.nestable})")
 
     # 生成
-    samples = generate_samples(seeds, recipes,
-                               waf=args.waf, nested_depth=args.nested_depth,
-                               quick=args.quick)
+    if args.probe_only:
+        samples = generate_probes(seeds, waf=args.waf)
+    else:
+        samples = generate_samples(seeds, recipes,
+                                   waf=args.waf, nested_depth=args.nested_depth,
+                                   quick=args.quick)
 
     # 写入
     for s in samples:

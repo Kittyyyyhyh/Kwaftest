@@ -1,0 +1,9 @@
+[
+  {"id": "P0-motd",     "path": "/etc/motd",                "tier": "P0", "verify_type": "honeytoken", "verify_pattern": "hp-d0e1f2a3", "desc": "系统文件"},
+  {"id": "P0-hostname", "path": "/etc/hostname",            "tier": "P0", "verify_type": "honeytoken", "verify_pattern": "hp-b4c5d6e7", "desc": "系统文件"},
+  {"id": "P1-settings", "path": "/srv/app/settings.json",   "tier": "P1", "verify_type": "honeytoken", "verify_pattern": "hp-f8a9b0c1", "desc": "应用配置"},
+  {"id": "P1-data",     "path": "/srv/app/data.xml",        "tier": "P1", "verify_type": "honeytoken", "verify_pattern": "hp-a1b2c3d4", "desc": "应用配置"},
+  {"id": "P2-db",       "path": "/srv/data/db.json",        "tier": "P2", "verify_type": "honeytoken", "verify_pattern": "hp-f8a9b0c1", "desc": "无害路径"},
+  {"id": "whoami",      "cmd":  "whoami",                    "tier": "CMD","verify_type": "output",     "verify_pattern": "www-data",   "desc": "侦察命令(黑名单)"},
+  {"id": "id",          "cmd":  "id",                        "tier": "CMD","verify_type": "output",     "verify_pattern": "uid=",       "desc": "侦察命令(安全)"}
+]

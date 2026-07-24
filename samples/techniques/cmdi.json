@@ -1,0 +1,8 @@
+[
+  {"id": "semi",    "name": ";",     "template": ";{CMD} {TARGET}", "category": "baseline"},
+  {"id": "pipe",    "name": "|",     "template": "|{CMD} {TARGET}", "category": "semantic_bypass"},
+  {"id": "or",      "name": "||",    "template": "||{CMD} {TARGET}", "category": "semantic_bypass"},
+  {"id": "and",     "name": "&&",    "template": "&&{CMD} {TARGET}", "category": "semantic_bypass"},
+  {"id": "dollar",  "name": "$()",   "template": "$({CMD} {TARGET})", "category": "semantic_bypass"},
+  {"id": "backtick","name": "`",     "template": "`{CMD} {TARGET}`", "category": "semantic_bypass"}
+]
