@@ -78,6 +78,9 @@ def step_generate(scenario, quick=False):
 def step_execute(batch_path):
     """阶段四: 执行"""
     print(f"[execute] 执行 {batch_path}...")
+    # 清空上次结果
+    if os.path.exists(LATEST_RESULT):
+        os.remove(LATEST_RESULT)
     from execute_batch import execute_batch
     run_id = f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     execute_batch(batch_path, LATEST_RESULT, run_id=run_id, progress_every=30)
