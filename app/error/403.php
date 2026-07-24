@@ -11,10 +11,17 @@ $totalScore = 0;
 $reqLine = '';
 
 if (file_exists($auditLog) && is_readable($auditLog)) {
-    $lines = file($auditLog, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if ($lines) {
-        for ($i = count($lines) - 1; $i >= 0; $i--) {
-            $entry = json_decode($lines[$i], true);
+    // 只读最后500行，避免大文件撑爆内存
+    $fp = fopen($auditLog, 'r');
+    if ($fp) {
+        fseek($fp, -min(filesize($auditLog), 500000), SEEK_END); // 最后500KB
+        fgets($fp); // 跳过可能不完整的第一行
+        $tail = stream_get_contents($fp);
+        fclose($fp);
+        $lines = array_filter(explode("\n", $tail));
+        $lines = array_reverse($lines); // 从后往前读
+        foreach ($lines as $line) {
+            $entry = json_decode($line, true);
             if (!$entry) continue;
             if (($entry['response']['status'] ?? 0) == 403
                 && strpos($entry['request']['request_line'] ?? '', '/error/') === false) {

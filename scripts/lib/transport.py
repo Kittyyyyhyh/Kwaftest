@@ -43,6 +43,8 @@ def transport_api(sample_dict: dict, run_id: str = "") -> dict:
 
         flag = data.get("flag")
         blocked = data.get("waf_blocked", False)
+        verify_type = sample_dict.get("verify_type", "honeytoken")
+        verify_pattern = sample_dict.get("verify_pattern", "")
 
         return {
             "run_id": run_id,
@@ -61,7 +63,9 @@ def transport_api(sample_dict: dict, run_id: str = "") -> dict:
             "waf_rule_msg": data.get("waf_rule_msg"),
             "http_status": data.get("http_status", 0),
             "flag_captured": flag,
-            "flag_verified": bool(flag and re.match(sample_dict.get("expected_flag_pattern", ".*"), flag or "")),
+            "verify_type": verify_type,
+            "verify_pattern": verify_pattern,
+            "flag_verified": bool(flag),
             "attack_successful": bool(flag and not blocked),
             "response_preview": (data.get("response_preview") or "")[:500],
             "error_message": None,
@@ -97,9 +101,17 @@ def transport_direct(sample_dict: dict, run_id: str = "") -> dict:
         body = resp.text or ""
         blocked = (resp.status_code == 403)
         flag = None
-        m = re.search(r'flag\{([^}]+)\}', body)
-        if m:
-            flag = m.group(0)
+        verify_type = sample_dict.get("verify_type", "honeytoken")
+        verify_pattern = sample_dict.get("verify_pattern", "")
+
+        if verify_type == "honeytoken":
+            m = re.search(r'hp-[0-9a-f]{8}', body)
+            if m: flag = m.group(0)
+        elif verify_type == "output":
+            pre_match = re.search(r'<pre>(.*?)</pre>', body, re.DOTALL)
+            search_area = pre_match.group(1) if pre_match else body
+            if verify_pattern and re.search(verify_pattern, search_area):
+                flag = verify_pattern
 
         return {
             "run_id": run_id,
@@ -120,7 +132,9 @@ def transport_direct(sample_dict: dict, run_id: str = "") -> dict:
             "waf_score_rce": resp.headers.get("X-WAF-Score-RCE"),
             "http_status": resp.status_code,
             "flag_captured": flag,
-            "flag_verified": bool(flag and re.match(sample_dict.get("expected_flag_pattern", ".*"), flag or "")),
+            "verify_type": verify_type,
+            "verify_pattern": verify_pattern,
+            "flag_verified": bool(flag),
             "attack_successful": bool(flag and not blocked),
             "response_preview": body[:500],
             "error_message": None,

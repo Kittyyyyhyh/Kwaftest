@@ -4,10 +4,11 @@
     "scenario": "cmdi",
     "level": 1,
     "category": "baseline",
-    "name": "P0-系统: ;cat /etc/motd",
+    "name": "P0-文件: ;cat /etc/motd",
     "payload": ";cat /etc/motd",
-    "description": "P0梯度: 读取系统文件/etc/motd。WAF应拦截(403)。蜜标hp-d0e1f2a3",
-    "expected_flag_pattern": "hp-d0e1f2a3",
+    "description": "P0梯度+文件读取型。蜜标hp-d0e1f2a3。WAF应拦截(403)",
+    "verify_type": "honeytoken",
+    "verify_pattern": "hp-d0e1f2a3",
     "applicable_transports": [
       "direct"
     ],
@@ -17,14 +18,15 @@
     }
   },
   {
-    "id": "cmdi-semi-P1-srv-db",
+    "id": "cmdi-semi-P1-srv-settings",
     "scenario": "cmdi",
     "level": 1,
     "category": "baseline",
-    "name": "P1-应用: ;cat /srv/config/db.yml",
-    "payload": ";cat /srv/config/db.yml",
-    "description": "P1梯度: 读取服务配置/srv/config/db.yml。蜜标hp-f8a9b0c1",
-    "expected_flag_pattern": "hp-f8a9b0c1",
+    "name": "P1-文件: ;cat /srv/app/settings.json",
+    "payload": ";cat /srv/app/settings.json",
+    "description": "P1梯度+文件读取型。蜜标hp-f8a9b0c1。前缀/srv/*安全，CRS放行",
+    "verify_type": "honeytoken",
+    "verify_pattern": "hp-f8a9b0c1",
     "applicable_transports": [
       "api",
       "direct"
@@ -35,14 +37,15 @@
     }
   },
   {
-    "id": "cmdi-semi-P2-app-db",
+    "id": "cmdi-semi-P2-srv-data",
     "scenario": "cmdi",
     "level": 1,
     "category": "baseline",
-    "name": "P2-无害: ;cat /app/config/db.php",
-    "payload": ";cat /app/config/db.php",
-    "description": "P2梯度: 读取应用配置/app/config/db.php。蜜标hp-4f8a2c1b。已验证绕过",
-    "expected_flag_pattern": "hp-4f8a2c1b",
+    "name": "P2-文件: ;cat /srv/data/db.json",
+    "payload": ";cat /srv/data/db.json",
+    "description": "P2梯度+文件读取型。蜜标hp-f8a9b0c1。CRS全放行",
+    "verify_type": "honeytoken",
+    "verify_pattern": "hp-f8a9b0c1",
     "applicable_transports": [
       "api",
       "direct"
@@ -53,14 +56,15 @@
     }
   },
   {
-    "id": "cmdi-pipe-P0-etc-hostname",
+    "id": "cmdi-recon-whoami",
     "scenario": "cmdi",
     "level": 1,
-    "category": "semantic_bypass",
-    "name": "P0-系统: |cat /etc/hostname",
-    "payload": "|cat /etc/hostname",
-    "description": "管道符+P0系统路径。蜜标hp-b4c5d6e7",
-    "expected_flag_pattern": "hp-b4c5d6e7",
+    "category": "baseline",
+    "name": "②侦察: ;whoami",
+    "payload": ";whoami",
+    "description": "命令执行型-无路径。验证WAF对纯命令执行的反应",
+    "verify_type": "output",
+    "verify_pattern": "www-data",
     "applicable_transports": [
       "direct"
     ],
@@ -70,50 +74,15 @@
     }
   },
   {
-    "id": "cmdi-pipe-P1-usr-local",
+    "id": "cmdi-recon-id",
     "scenario": "cmdi",
     "level": 1,
-    "category": "semantic_bypass",
-    "name": "P1-应用: |cat /usr/local/share/db.ini",
-    "payload": "|cat /usr/local/share/db.ini",
-    "description": "管道符+P1应用路径。蜜标hp-e5f6a7b8",
-    "expected_flag_pattern": "hp-e5f6a7b8",
-    "applicable_transports": [
-      "api",
-      "direct"
-    ],
-    "http_method": "GET",
-    "url_params": {
-      "cmd": "${payload}"
-    }
-  },
-  {
-    "id": "cmdi-pipe-P2-app-env",
-    "scenario": "cmdi",
-    "level": 1,
-    "category": "semantic_bypass",
-    "name": "P2-无害: |cat /app/config/.env",
-    "payload": "|cat /app/config/.env",
-    "description": "管道符+P2无害路径。蜜标hp-e9a1b3d5",
-    "expected_flag_pattern": "hp-e9a1b3d5",
-    "applicable_transports": [
-      "api",
-      "direct"
-    ],
-    "http_method": "GET",
-    "url_params": {
-      "cmd": "${payload}"
-    }
-  },
-  {
-    "id": "cmdi-dollar-P0-etc-motd",
-    "scenario": "cmdi",
-    "level": 1,
-    "category": "semantic_bypass",
-    "name": "P0-系统: $(cat /etc/motd)",
-    "payload": "$(cat /etc/motd)",
-    "description": "$()语法+P0系统路径。WAF应拦截语法或路径。蜜标hp-d0e1f2a3",
-    "expected_flag_pattern": "hp-d0e1f2a3",
+    "category": "baseline",
+    "name": "②侦察: ;id",
+    "payload": ";id",
+    "description": "命令执行型-无路径。三角定位探针A",
+    "verify_type": "output",
+    "verify_pattern": "uid=",
     "applicable_transports": [
       "direct"
     ],
@@ -123,32 +92,15 @@
     }
   },
   {
-    "id": "cmdi-dollar-P2-app-db",
+    "id": "cmdi-recon-uname",
     "scenario": "cmdi",
     "level": 1,
-    "category": "semantic_bypass",
-    "name": "P2-无害: $(cat /app/config/db.php)",
-    "payload": "$(cat /app/config/db.php)",
-    "description": "$()语法+P2无害路径。区分WAF拦语法还是拦路径。蜜标hp-4f8a2c1b",
-    "expected_flag_pattern": "hp-4f8a2c1b",
-    "applicable_transports": [
-      "api",
-      "direct"
-    ],
-    "http_method": "GET",
-    "url_params": {
-      "cmd": "${payload}"
-    }
-  },
-  {
-    "id": "cmdi-or-P0-etc-hostname",
-    "scenario": "cmdi",
-    "level": 1,
-    "category": "semantic_bypass",
-    "name": "P0-系统: ||cat /etc/hostname",
-    "payload": "||cat /etc/hostname",
-    "description": "||语法+P0系统路径。蜜标hp-b4c5d6e7",
-    "expected_flag_pattern": "hp-b4c5d6e7",
+    "category": "baseline",
+    "name": "②侦察: ;uname -a",
+    "payload": ";uname -a",
+    "description": "命令执行型-无路径。系统信息收集",
+    "verify_type": "output",
+    "verify_pattern": "Linux",
     "applicable_transports": [
       "direct"
     ],
@@ -158,16 +110,70 @@
     }
   },
   {
-    "id": "cmdi-or-P2-app-db",
+    "id": "cmdi-recon-env",
+    "scenario": "cmdi",
+    "level": 1,
+    "category": "baseline",
+    "name": "②侦察: ;env",
+    "payload": ";env",
+    "description": "命令执行型-无路径。三角定位探针B，泄露环境变量",
+    "verify_type": "output",
+    "verify_pattern": "HOME=",
+    "applicable_transports": [
+      "direct"
+    ],
+    "http_method": "GET",
+    "url_params": {
+      "cmd": "${payload}"
+    }
+  },
+  {
+    "id": "cmdi-pipe-whoami",
     "scenario": "cmdi",
     "level": 1,
     "category": "semantic_bypass",
-    "name": "P2-无害: ||cat /app/config/db.php",
-    "payload": "||cat /app/config/db.php",
-    "description": "||语法+P2无害路径。蜜标hp-4f8a2c1b",
-    "expected_flag_pattern": "hp-4f8a2c1b",
+    "name": "②语义: |whoami",
+    "payload": "|whoami",
+    "description": "管道符+命令执行型。测试|语法对无路径命令的绕过",
+    "verify_type": "output",
+    "verify_pattern": "www-data",
     "applicable_transports": [
-      "api",
+      "direct"
+    ],
+    "http_method": "GET",
+    "url_params": {
+      "cmd": "${payload}"
+    }
+  },
+  {
+    "id": "cmdi-or-whoami",
+    "scenario": "cmdi",
+    "level": 1,
+    "category": "semantic_bypass",
+    "name": "②语义: ||whoami",
+    "payload": "||whoami",
+    "description": "逻辑或+命令执行型",
+    "verify_type": "output",
+    "verify_pattern": "www-data",
+    "applicable_transports": [
+      "direct"
+    ],
+    "http_method": "GET",
+    "url_params": {
+      "cmd": "${payload}"
+    }
+  },
+  {
+    "id": "cmdi-dollar-whoami",
+    "scenario": "cmdi",
+    "level": 1,
+    "category": "semantic_bypass",
+    "name": "②语义: $(whoami)",
+    "payload": "$(whoami)",
+    "description": "$()语法+命令执行型。CRS通常拦截$()",
+    "verify_type": "output",
+    "verify_pattern": "www-data",
+    "applicable_transports": [
       "direct"
     ],
     "http_method": "GET",
@@ -180,12 +186,12 @@
     "scenario": "cmdi",
     "level": 2,
     "category": "baseline",
-    "name": "参数位注入 — app.conf",
-    "payload": ";cat /app/config/app.conf",
-    "description": "nslookup参数位命令注入。蜜标: hp-7d3b9e1f",
-    "expected_flag_pattern": "hp-7d3b9e1f",
+    "name": "参数位: ;whoami",
+    "payload": ";whoami",
+    "description": "nslookup参数位注入。命令执行型-无路径",
+    "verify_type": "output",
+    "verify_pattern": "www-data",
     "applicable_transports": [
-      "api",
       "direct"
     ],
     "http_method": "GET",
@@ -198,12 +204,12 @@
     "scenario": "cmdi",
     "level": 3,
     "category": "baseline",
-    "name": "嵌套执行 — .env",
-    "payload": "||cat /app/config/.env",
-    "description": "echo \"$(cmd ...)\" 嵌套上下文。蜜标: hp-e9a1b3d5",
-    "expected_flag_pattern": "hp-e9a1b3d5",
+    "name": "嵌套执行: ||whoami",
+    "payload": "||whoami",
+    "description": "echo \"$(cmd ...)\"嵌套上下文。命令执行型-无路径",
+    "verify_type": "output",
+    "verify_pattern": "www-data",
     "applicable_transports": [
-      "api",
       "direct"
     ],
     "http_method": "GET",
@@ -216,66 +222,12 @@
     "scenario": "cmdi",
     "level": 4,
     "category": "baseline",
-    "name": "环境变量投毒 — access.log",
-    "payload": "cat /app/logs/access.log",
-    "description": "PATH环境变量污染+命令执行。蜜标: hp-c2d5f8a3",
-    "expected_flag_pattern": "hp-c2d5f8a3",
+    "name": "环境变量投毒: whoami",
+    "payload": "whoami",
+    "description": "PATH环境变量污染+命令执行",
+    "verify_type": "output",
+    "verify_pattern": "www-data",
     "applicable_transports": [
-      "api",
-      "direct"
-    ],
-    "http_method": "GET",
-    "url_params": {
-      "cmd": "${payload}"
-    }
-  },
-  {
-    "id": "cmdi-l5-file-write",
-    "scenario": "cmdi",
-    "level": 5,
-    "category": "baseline",
-    "name": "OOB文件写入 — app.log",
-    "payload": ";cat /app/logs/app.log > /var/www/html/uploads/out.txt",
-    "description": "无回显OOB，写文件到web可访问路径。蜜标: hp-6c8f2e4a",
-    "expected_flag_pattern": "hp-6c8f2e4a",
-    "applicable_transports": [
-      "api",
-      "direct"
-    ],
-    "http_method": "GET",
-    "url_params": {
-      "cmd": "${payload}"
-    }
-  },
-  {
-    "id": "cmdi-probe-id",
-    "scenario": "cmdi",
-    "level": 1,
-    "category": "baseline",
-    "name": "【探针】无害命令 id",
-    "payload": "${SEPARATOR}id",
-    "description": "探针模板: 用于三角定位归因。${SEPARATOR}由生成器替换",
-    "expected_flag_pattern": "uid=",
-    "applicable_transports": [
-      "api",
-      "direct"
-    ],
-    "http_method": "GET",
-    "url_params": {
-      "cmd": "${payload}"
-    }
-  },
-  {
-    "id": "cmdi-probe-env",
-    "scenario": "cmdi",
-    "level": 1,
-    "category": "baseline",
-    "name": "【探针】无害命令 env",
-    "payload": "${SEPARATOR}env",
-    "description": "探针模板: 验证分隔符是否被WAF拦截",
-    "expected_flag_pattern": "HOME=",
-    "applicable_transports": [
-      "api",
       "direct"
     ],
     "http_method": "GET",

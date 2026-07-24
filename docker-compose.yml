@@ -30,15 +30,14 @@ services:
         condition: service_healthy
     volumes:
       - ./app:/var/www/html
-      - ./honeytokens/config/db.php:/app/config/db.php:ro
-      - ./honeytokens/config/app.conf:/app/config/app.conf:ro
-      - ./honeytokens/config/.env:/app/config/.env:ro
-      - ./honeytokens/logs/access.log:/app/logs/access.log:ro
-      - ./honeytokens/logs/app.log:/app/logs/app.log:ro
+      # P0: CRS Layer1 路径前缀黑名单 — /etc/* 100%拦截
       - ./honeytokens/etc_motd:/etc/motd:ro
       - ./honeytokens/etc_hostname:/etc/hostname:ro
-      - ./honeytokens/srv_db.yml:/srv/config/db.yml:ro
-      - ./honeytokens/usr_local_db.ini:/usr/local/share/db.ini:ro
+      # P1: CRS Layer2 文件名黑名单 — 前缀安全，特定文件名触发
+      - ./honeytokens/srv_settings.json:/srv/app/settings.json:ro
+      - ./honeytokens/srv_data.json:/srv/app/data.xml:ro
+      # P2: CRS 全放行 — /srv/* 不在任何黑名单
+      - ./honeytokens/srv_db.yml:/srv/data/db.json:ro
       - logs_volume:/var/log/waf
     networks:
       - waf-net

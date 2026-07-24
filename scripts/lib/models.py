@@ -18,8 +18,9 @@ class Seed:
     name: str                        # 人类可读名称
     payload: str                     # 原始攻击载荷（未编码）
     description: str                 # 攻击原理说明
-    expected_flag_pattern: str       # 期望的flag正则，如 "flag\\{sqli_l1_.*\\}"
-    applicable_transports: List[str] # 可用传输模式
+    verify_type: str = "honeytoken"  # "honeytoken" | "output" — 验证方式
+    verify_pattern: str = ""         # 蜜标正则hp-[0-9a-f]{8} 或 命令输出关键字如"uid="
+    applicable_transports: List[str] = field(default_factory=lambda: ["api", "direct"])
     http_method: str = "GET"         # HTTP 方法
     url_params: Dict[str, str] = field(default_factory=dict)  # URL参数模板，${payload}占位
 
@@ -30,10 +31,13 @@ class Seed:
 
     def to_dict(self) -> dict:
         d = asdict(self)
-        return {k: v for k, v in d.items() if v is not None}
+        return {k: v for k, v in d.items() if v is not None and v != "" and v != [] and v != {}}
 
     @classmethod
     def from_dict(cls, d: dict) -> "Seed":
+        # 向后兼容：旧种子用 expected_flag_pattern
+        if "expected_flag_pattern" in d and "verify_pattern" not in d:
+            d["verify_pattern"] = d.pop("expected_flag_pattern")
         return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
 
 
@@ -70,7 +74,9 @@ class Sample:
     http_method: str = "GET"
     http_target: str = ""            # 如 "/sqli/level1.php"
     url_params: Dict[str, str] = field(default_factory=dict)
-    expected_flag_pattern: str = ""
+    expected_flag_pattern: str = ""  # DEPRECATED, use verify_pattern
+    verify_type: str = "honeytoken"  # "honeytoken" | "output"
+    verify_pattern: str = ""         # 蜜标或命令输出匹配模式
     waf: str = "on"                  # "on" | "off"
 
     # Upload专用
@@ -154,7 +160,7 @@ class Result:
             waf_rule_msg=data.get("waf_rule_msg"),
             http_status=data.get("http_status", 0),
             flag_captured=flag,
-            flag_verified=_verify_flag(flag, sample.expected_flag_pattern),
+            flag_verified=_verify(flag, "", sample.verify_type, sample.verify_pattern),
             attack_successful=bool(flag and not data.get("waf_blocked")),
             response_preview=(data.get("response_preview") or "")[:500],
         )
@@ -166,11 +172,20 @@ class Result:
         body = resp.text or ""
         blocked = (resp.status_code == 403)
         flag = None
-        m = re.search(r'flag\{([^}]+)\}', body)
-        if m: flag = m.group(0)
 
-        # 从响应头提取 WAF 评分
+        # 根据 verify_type 提取成功标志
+        if sample.verify_type == "honeytoken":
+            m = re.search(r'hp-[0-9a-f]{8}', body)
+            if m: flag = m.group(0)
+        elif sample.verify_type == "output":
+            # 只匹配命令输出区域 <pre>...</pre>，避免被页面描述干扰
+            pre_match = re.search(r'<pre>(.*?)</pre>', body, re.DOTALL)
+            search_area = pre_match.group(1) if pre_match else body
+            if sample.verify_pattern and re.search(sample.verify_pattern, search_area):
+                flag = sample.verify_pattern
+
         waf_rule = resp.headers.get("X-WAF-Blocked", "")
+        verified = _verify(flag, body, sample.verify_type, sample.verify_pattern)
         return cls(
             run_id=run_id,
             sample_id=sample.sample_id,
@@ -190,8 +205,8 @@ class Result:
             waf_score_rce=resp.headers.get("X-WAF-Score-RCE"),
             http_status=resp.status_code,
             flag_captured=flag,
-            flag_verified=_verify_flag(flag, sample.expected_flag_pattern),
-            attack_successful=bool(flag and not blocked),
+            flag_verified=verified,
+            attack_successful=bool(not blocked and verified),
             response_preview=body[:500],
         )
 
@@ -202,8 +217,14 @@ class Result:
         import re
         blocked = (http_status == 403)
         flag = None
-        m = re.search(r'flag\{([^}]+)\}', shell_flag or body)
-        if m: flag = m.group(0)
+
+        if sample.verify_type == "honeytoken":
+            m = re.search(r'hp-[0-9a-f]{8}', shell_flag or body)
+            if m: flag = m.group(0)
+        elif sample.verify_type == "output":
+            if sample.verify_pattern and re.search(sample.verify_pattern, shell_flag):
+                flag = sample.verify_pattern
+
         upload_ok = '上传成功' in body or '文件已暂存' in body
 
         return cls(
@@ -221,15 +242,19 @@ class Result:
             waf_blocked=blocked,
             http_status=http_status,
             flag_captured=flag,
-            flag_verified=_verify_flag(flag, sample.expected_flag_pattern),
+            flag_verified=bool(flag),
             attack_successful=bool(flag and not blocked),
             response_preview=body[:500] if not flag else f"UPLOAD_OK, shell_exec: {shell_flag[:200]}",
         )
 
 
-def _verify_flag(flag: Optional[str], pattern: str) -> bool:
-    """验证捕获的 flag 是否匹配期望模式"""
-    if not flag or not pattern:
-        return bool(flag)
+def _verify(flag: Optional[str], body: str, verify_type: str, pattern: str) -> bool:
+    """统一验证：蜜标或命令输出"""
+    if not pattern:
+        return bool(flag)  # 无模式时，有flag就算成功
     import re
-    return bool(re.match(pattern, flag))
+    if verify_type == "honeytoken":
+        return bool(flag and re.search(pattern, flag))
+    elif verify_type == "output":
+        return bool(re.search(pattern, body))
+    return bool(flag)

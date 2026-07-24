@@ -83,11 +83,13 @@ def auto_select_transport(seed: Seed, encoding_ids: list[str]) -> str:
     if encoding_ids:
         return "direct"
 
+    # output验证类型必须用direct（API只支持蜜标hp-xxx）
+    if getattr(seed, 'verify_type', 'honeytoken') == 'output':
+        return "direct"
     # 种子标记为 direct only
     if seed.applicable_transports == ["direct"]:
         return "direct"
-
-    # 默认：无编码走 API（方便日志记录）
+    # 默认：无编码走 API
     return "api"
 
 
@@ -122,7 +124,9 @@ def generate_samples(seeds: list[Seed], recipes: list[EncodingRecipe],
                 http_method=seed.http_method,
                 http_target=resolve_target(seed.scenario, seed.level),
                 url_params=seed.url_params,
-                expected_flag_pattern=seed.expected_flag_pattern,
+                expected_flag_pattern=seed.verify_pattern,
+                verify_type=getattr(seed, 'verify_type', 'honeytoken'),
+                verify_pattern=seed.verify_pattern,
                 waf=waf,
                 filename=seed.filename,
                 content_type=seed.content_type,
@@ -174,7 +178,9 @@ def generate_samples(seeds: list[Seed], recipes: list[EncodingRecipe],
                 http_method=seed.http_method,
                 http_target=resolve_target(seed.scenario, seed.level),
                 url_params=seed.url_params,
-                expected_flag_pattern=seed.expected_flag_pattern,
+                expected_flag_pattern=seed.verify_pattern,
+                verify_type=getattr(seed, 'verify_type', 'honeytoken'),
+                verify_pattern=seed.verify_pattern,
                 waf=waf,
                 filename=seed.filename,
                 content_type=seed.content_type,
