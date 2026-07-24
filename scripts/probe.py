@@ -31,9 +31,11 @@ def run(scenario: str, cache_path: str = CACHE, base_url: str = "http://localhos
             else:
                 payload = tech["template"].replace("{CMD}", tgt["cmd"]).replace(" {TARGET}", "")
 
+            url_param = tgt.get("url_param", "cmd" if scenario == "cmdi" else "id")
+            level = tgt.get("level", 1)
             encoded = urllib.parse.quote(payload, safe="")
             try:
-                resp = requests.get(f"{base_url}/{scenario}/level1.php?cmd={encoded}",
+                resp = requests.get(f"{base_url}/{scenario}/level{level}.php?{url_param}={encoded}",
                                     timeout=5, allow_redirects=False)
                 vp = tgt.get("verify_pattern", "")
                 if resp.status_code == 403:
