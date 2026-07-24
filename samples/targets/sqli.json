@@ -1,6 +1,0 @@
-[
-  {"id": "users_email", "payload": "1,username,email,role FROM sqli_l1_users WHERE id=4", "level": 1, "url_param": "id", "tier": "P1", "verify_type": "honeytoken", "verify_pattern": "hp-3a5c7e9b", "desc": "用户邮箱"},
-  {"id": "app_secret",  "payload": "(SELECT config_value FROM app_config WHERE config_key='app.secret')", "level": 2, "url_param": "id", "tier": "P0", "verify_type": "honeytoken", "verify_pattern": "hp-a1b3c5d7", "desc": "应用密钥"},
-  {"id": "api_token",   "payload": "(SELECT config_value FROM app_config WHERE config_key='api.token')",  "level": 2, "url_param": "id", "tier": "P0", "verify_type": "honeytoken", "verify_pattern": "hp-e2f4a6b8", "desc": "API令牌"},
-  {"id": "backup_key",  "payload": "(SELECT config_value FROM app_config WHERE config_key='backup.key')", "level": 2, "url_param": "id", "tier": "P1", "verify_type": "honeytoken", "verify_pattern": "hp-c2d5f8a3", "desc": "备份密钥"}
-]
