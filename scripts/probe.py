@@ -2,6 +2,7 @@
 """探针 — 技法×目标全矩阵探测(无编码,秒级). 输出缓存供剪枝使用."""
 import sys,io,os,json,argparse,urllib.parse,requests,re
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from scripts.lib.transport import verify_attack
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(BASE, "logs", "probe_cache.json")
 
@@ -37,10 +38,11 @@ def run(scenario: str, cache_path: str = CACHE, base_url: str = "http://localhos
             try:
                 resp = requests.get(f"{base_url}/{scenario}/level{level}.php?{url_param}={encoded}",
                                     timeout=5, allow_redirects=False)
-                vp = tgt.get("verify_pattern", "")
+                verify_config = tgt.get("verify", {})
+                _, verified = verify_attack(verify_config, resp.text)
                 if resp.status_code == 403:
                     probes[tech["id"]][tgt["id"]] = "BLOCKED"
-                elif vp and re.search(vp, resp.text):
+                elif verified:
                     probes[tech["id"]][tgt["id"]] = "FLAG"
                 else:
                     probes[tech["id"]][tgt["id"]] = "PASSED"

@@ -75,8 +75,9 @@ def _generate_from(techs: list, targets: list, scenario: str,
                 http_method="GET",
                 http_target=f"/{scenario}/level{target.get('level',1)}.php",
                 url_params={target.get("url_param", "cmd" if scenario == "cmdi" else "id"): "${payload}"},
-                verify_type=verify_type,
-                verify_pattern=verify_pattern,
+                verify_type=target.get("verify", {}).get("type", "honeytoken"),
+                verify_pattern=target.get("verify", {}).get("pattern", ""),
+                verify=target.get("verify", {}),
                 waf=waf,
             )
             samples.append(s.to_dict())

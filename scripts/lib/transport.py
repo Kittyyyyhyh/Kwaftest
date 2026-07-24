@@ -26,6 +26,60 @@ BASE_URL = "http://localhost:8090"
 DEFAULT_TIMEOUT = 15
 
 
+def verify_attack(verify_config: dict, response_body: str) -> tuple:
+    """
+    统一验证: 根据 verify.type 判断攻击是否成功
+    返回 (flag, success)
+      flag: 捕获到的标志(蜜标/关键字/副作用结果)
+      success: 验证是否通过
+    """
+    import re
+    vtype = verify_config.get("type", "honeytoken")
+    pattern = verify_config.get("pattern", "")
+
+    if vtype == "honeytoken":
+        if pattern:
+            m = re.search(pattern, response_body)
+            return (m.group(0), True) if m else (None, False)
+        m = re.search(r'hp-[0-9a-f]{8}', response_body)
+        return (m.group(0), True) if m else (None, False)
+
+    elif vtype == "output":
+        pre_match = re.search(r'<pre>(.*?)</pre>', response_body, re.DOTALL)
+        search_area = pre_match.group(1) if pre_match else response_body
+        if pattern and re.search(pattern, search_area):
+            return (pattern, True)
+        return (None, False)
+
+    elif vtype == "side_effect":
+        # 副作用验证: 事后进容器检查
+        import subprocess
+        action = verify_config.get("action", "")
+        path = verify_config.get("path", "")
+        expected = verify_config.get("expected", True)
+        try:
+            if action == "file_exists":
+                r = subprocess.run(
+                    ["docker", "exec", "waf-app", "test", "-f", path],
+                    capture_output=True, timeout=5
+                )
+                exists = (r.returncode == 0)
+                if exists == expected:
+                    return (f"file_{'exists' if exists else 'gone'}:{path}", True)
+            elif action == "file_contains":
+                r = subprocess.run(
+                    ["docker", "exec", "waf-app", "grep", "-q", pattern, path],
+                    capture_output=True, timeout=5
+                )
+                if r.returncode == 0:
+                    return (f"found:{pattern}", True)
+        except Exception:
+            pass
+        return (None, False)
+
+    return (None, False)
+
+
 def transport_api(sample_dict: dict, run_id: str = "") -> dict:
     """API模式: POST /api/attack.php → 获取结构化JSON响应"""
     try:
@@ -100,18 +154,8 @@ def transport_direct(sample_dict: dict, run_id: str = "") -> dict:
 
         body = resp.text or ""
         blocked = (resp.status_code == 403)
-        flag = None
-        verify_type = sample_dict.get("verify_type", "honeytoken")
-        verify_pattern = sample_dict.get("verify_pattern", "")
-
-        if verify_type == "honeytoken":
-            m = re.search(r'hp-[0-9a-f]{8}', body)
-            if m: flag = m.group(0)
-        elif verify_type == "output":
-            pre_match = re.search(r'<pre>(.*?)</pre>', body, re.DOTALL)
-            search_area = pre_match.group(1) if pre_match else body
-            if verify_pattern and re.search(verify_pattern, search_area):
-                flag = verify_pattern
+        verify_config = sample_dict.get("verify", {"type": "honeytoken"})
+        flag, verified = verify_attack(verify_config, body)
 
         return {
             "run_id": run_id,
@@ -132,9 +176,7 @@ def transport_direct(sample_dict: dict, run_id: str = "") -> dict:
             "waf_score_rce": resp.headers.get("X-WAF-Score-RCE"),
             "http_status": resp.status_code,
             "flag_captured": flag,
-            "verify_type": verify_type,
-            "verify_pattern": verify_pattern,
-            "flag_verified": bool(flag),
+            "flag_verified": verified,
             "attack_successful": bool(flag and not blocked),
             "response_preview": body[:500],
             "error_message": None,
