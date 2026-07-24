@@ -26,55 +26,37 @@ BASE_URL = "http://localhost:8090"
 DEFAULT_TIMEOUT = 15
 
 
-def verify_attack(verify_config: dict, response_body: str) -> tuple:
-    """
-    统一验证: 根据 verify.type 判断攻击是否成功
-    返回 (flag, success)
-      flag: 捕获到的标志(蜜标/关键字/副作用结果)
-      success: 验证是否通过
-    """
-    import re
-    vtype = verify_config.get("type", "honeytoken")
-    pattern = verify_config.get("pattern", "")
+def check_success(success_on: dict, response_body: str = "") -> tuple:
+    """统一成功判定。返回 (evidence, passed)。evidence是证据字符串, passed是是否通过。"""
+    import re, subprocess
+    check = success_on.get("check", "response_contains")
+    value = success_on.get("value", "")
 
-    if vtype == "honeytoken":
-        if pattern:
-            m = re.search(pattern, response_body)
-            return (m.group(0), True) if m else (None, False)
-        m = re.search(r'hp-[0-9a-f]{8}', response_body)
-        return (m.group(0), True) if m else (None, False)
-
-    elif vtype == "output":
+    if check == "response_contains":
+        # 响应体中搜索: 蜜标、命令输出均可
+        if not value:
+            return (None, False)
+        # 先搜<pre>标签(命令输出), 搜不到再搜全文
         pre_match = re.search(r'<pre>(.*?)</pre>', response_body, re.DOTALL)
         search_area = pre_match.group(1) if pre_match else response_body
-        if pattern and re.search(pattern, search_area):
-            return (pattern, True)
+        if re.search(value, search_area):
+            return (value, True)
         return (None, False)
 
-    elif vtype == "side_effect":
-        import subprocess
-        action = verify_config.get("action", "")
-        path = verify_config.get("path", "")
-        expected = verify_config.get("expected", True)
-        try:
-            if action == "file_exists":
-                r = subprocess.run(
-                    ["docker", "exec", "waf-app", "test", "-f", path],
-                    capture_output=True, timeout=5
-                )
-                exists = (r.returncode == 0)
-                if exists == expected:
-                    return (f"file_{'exists' if exists else 'gone'}:{path}", True)
-            elif action == "file_contains":
-                r = subprocess.run(
-                    ["docker", "exec", "waf-app", "grep", "-q", pattern, path],
-                    capture_output=True, timeout=5
-                )
-                if r.returncode == 0:
-                    return (f"found:{pattern}", True)
-        except Exception:
-            pass
-        return (None, False)
+    if check == "file_exists":
+        path = success_on.get("path", "")
+        r = subprocess.run(["docker", "exec", "waf-app", "test", "-f", path],
+                           capture_output=True, timeout=5)
+        exists = (r.returncode == 0)
+        passed = (exists == bool(value))
+        return (f"file_{'exists' if exists else 'gone'}:{path}", passed)
+
+    if check == "file_missing":
+        path = success_on.get("path", "")
+        r = subprocess.run(["docker", "exec", "waf-app", "test", "-f", path],
+                           capture_output=True, timeout=5)
+        gone = (r.returncode != 0)
+        return (f"file_{'gone' if gone else 'still_exists'}:{path}", gone)
 
     return (None, False)
 
@@ -151,9 +133,9 @@ def transport_direct(sample_dict: dict, run_id: str = "") -> dict:
         url = f"{BASE_URL}{target}"
         resp = requests.get(url, params=params, timeout=DEFAULT_TIMEOUT, allow_redirects=False)
 
-        # 前置处理: side_effect需要先准备文件状态
-        verify_config = sample_dict.get("verify", {"type": "honeytoken"})
-        pre_setup = verify_config.get("pre_setup", {})
+        # 前置处理: 需要先准备文件状态
+        success_on = sample_dict.get("success_on", {})
+        pre_setup = sample_dict.get("pre_setup", {})
         if pre_setup:
             import subprocess
             try:
@@ -167,7 +149,7 @@ def transport_direct(sample_dict: dict, run_id: str = "") -> dict:
 
         body = resp.text or ""
         blocked = (resp.status_code == 403)
-        flag, verified = verify_attack(verify_config, body)
+        flag, verified = check_success(success_on, body)
 
         return {
             "run_id": run_id,

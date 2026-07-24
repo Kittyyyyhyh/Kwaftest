@@ -41,22 +41,15 @@ def _generate_from(techs: list, targets: list, scenario: str,
             if tgt_level not in tech_levels:
                 continue
 
-            # 构建payload: 用template或手动拼接
-            cmd = target.get("cmd", "cat")
-            path = target.get("path", "")
+            # 构建payload
+            payload = tech["template"].replace("{PAYLOAD}", target["payload"])
 
-            if path:
-                payload = tech["template"].replace("{CMD}", cmd).replace("{TARGET}", path)
-            else:
-                # 纯命令(无路径): whoami, id 等
-                payload = tech["template"].replace("{CMD}", target["cmd"]).replace(" {TARGET}", "")
+            # 验证
+            check_type = target.get("success_on", {}).get("check", "response_contains")
+            check_value = target.get("success_on", {}).get("value", "")
 
-            # 验证类型
-            verify_type = target.get("verify_type", "honeytoken")
-            verify_pattern = target.get("verify_pattern", "")
-
-            # Transport
-            transport = "direct" if verify_type == "output" else "api"
+            # Transport: 非response_contains类型的用direct
+            transport = "direct" if check_type != "response_contains" else "api"
             if tech["id"] in ("dollar", "backtick"):
                 transport = "direct"
 
@@ -75,9 +68,10 @@ def _generate_from(techs: list, targets: list, scenario: str,
                 http_method="GET",
                 http_target=f"/{scenario}/level{target.get('level',1)}.php",
                 url_params={target.get("url_param", "cmd" if scenario == "cmdi" else "id"): "${payload}"},
-                verify_type=target.get("verify", {}).get("type", "honeytoken"),
-                verify_pattern=target.get("verify", {}).get("pattern", ""),
-                verify=target.get("verify", {}),
+                verify_type=check_type,
+                verify_pattern=check_value,
+                success_on=target.get("success_on", {}),
+                pre_setup=target.get("pre_setup", {}),
                 waf=waf,
             )
             samples.append(s.to_dict())
@@ -108,8 +102,8 @@ def _generate_from(techs: list, targets: list, scenario: str,
                     http_method="GET",
                     http_target=f"/{scenario}/level1.php",
                     url_params={"cmd" if scenario == "cmdi" else "id": "${payload}"},
-                    verify_type=verify_type,
-                    verify_pattern=verify_pattern,
+                    verify_type=check_type,
+                    verify_pattern=check_value,
                     waf=waf,
                 )
                 samples.append(s.to_dict())
@@ -136,8 +130,8 @@ def _generate_from(techs: list, targets: list, scenario: str,
                             http_method="GET",
                             http_target=f"/{scenario}/level1.php",
                             url_params={"cmd": "${payload}"},
-                            verify_type=verify_type,
-                            verify_pattern=verify_pattern,
+                            verify_type=check_type,
+                            verify_pattern=check_value,
                             waf=waf,
                         )
                         samples.append(s.to_dict())

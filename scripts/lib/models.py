@@ -77,7 +77,9 @@ class Sample:
     expected_flag_pattern: str = ""  # DEPRECATED, use verify_pattern
     verify_type: str = "honeytoken"  # "honeytoken" | "output"
     verify_pattern: str = ""         # 蜜标或命令输出匹配模式
-    verify: dict = field(default_factory=dict)  # 验证配置对象 {"type":"...", "pattern":"..."}
+    verify: dict = field(default_factory=dict)  # 验证配置对象 (legacy)
+    success_on: dict = field(default_factory=dict)  # {"check":"...", "value":"..."}
+    pre_setup: dict = field(default_factory=dict)   # 前置处理
     waf: str = "on"                  # "on" | "off"
 
     # Upload专用

@@ -2,7 +2,7 @@
 """探针 — 技法×目标全矩阵探测(无编码,秒级). 输出缓存供剪枝使用."""
 import sys,io,os,json,argparse,urllib.parse,requests,re
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from scripts.lib.transport import verify_attack
+from scripts.lib.transport import check_success
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(BASE, "logs", "probe_cache.json")
 
@@ -25,19 +25,14 @@ def run(scenario: str, cache_path: str = CACHE, base_url: str = "http://localhos
     for tech in techs:
         probes[tech["id"]] = {}
         for tgt in targets:
-            cmd = tgt.get("cmd", "cat")
-            path = tgt.get("path", "")
-            if path:
-                payload = tech["template"].replace("{CMD}", cmd).replace("{TARGET}", path)
-            else:
-                payload = tech["template"].replace("{CMD}", tgt["cmd"]).replace(" {TARGET}", "")
+            payload = tech["template"].replace("{PAYLOAD}", tgt["payload"])
 
             url_param = tgt.get("url_param", "cmd" if scenario == "cmdi" else "id")
             level = tgt.get("level", 1)
             encoded = urllib.parse.quote(payload, safe="")
 
             # 前置处理: side_effect需要先准备文件状态
-            pre_setup = tgt.get("verify", {}).get("pre_setup", {})
+            pre_setup = tgt.get("pre_setup", {})
             if pre_setup:
                 try:
                     import subprocess
@@ -52,8 +47,8 @@ def run(scenario: str, cache_path: str = CACHE, base_url: str = "http://localhos
             try:
                 resp = requests.get(f"{base_url}/{scenario}/level{level}.php?{url_param}={encoded}",
                                     timeout=5, allow_redirects=False)
-                verify_config = tgt.get("verify", {})
-                _, verified = verify_attack(verify_config, resp.text)
+                success_on = tgt.get("success_on", {})
+                _, verified = check_success(success_on, resp.text)
                 if resp.status_code == 403:
                     probes[tech["id"]][tgt["id"]] = "BLOCKED"
                 elif verified:

