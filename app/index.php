@@ -1,6 +1,6 @@
 <?php
 /**
- * WAF 靶场主页 — 15关导航
+ * WAF 靶场主页 — 6关导航
  */
 ?>
 <!DOCTYPE html>
@@ -84,11 +84,8 @@
     <div class="levels">
         <?php
         $sqliLevels = [
-            ['L1', '数字型联合查询', 'WHERE id=$id 直接拼接', 'l2', 'sqli/level1.php?id=1'],
-            ['L2', '字符型引号闭合', "WHERE name='\$id' 字符型", 'l3', "sqli/level2.php?id=Laptop%20Pro%2015"],
-            ['L3', 'LIKE 搜索型', "LIKE '%\$id%' 模糊搜索", 'l3', 'sqli/level3.php?id=Security'],
-            ['L4', 'ORDER BY 排序型', 'ORDER BY $id 不能用UNION', 'l4', 'sqli/level4.php?id=score'],
-            ['L5', '无回显布尔盲注', '只返回存在/不存在', 'l5', 'sqli/level5.php?id=1'],
+            ['L1', '数字型联合查询', 'WHERE id=$id 直接拼接', 'l1', 'sqli/level1.php?id=1'],
+            ['L2', 'ORDER BY 排序型', 'ORDER BY $id 不能用UNION', 'l2', 'sqli/level2.php?id=score'],
         ];
         foreach ($sqliLevels as [$tag, $title, $desc, $cls, $link]) {
             echo "<a href='$link' class='card'>";
@@ -108,11 +105,8 @@
     <div class="levels">
         <?php
         $cmdiLevels = [
-            ['L1', '基础命令拼接', 'ping -c 1 $input', 'l2', 'cmdi/level1.php?cmd=127.0.0.1'],
+            ['L1', '基础命令拼接', 'ping -c 1 $input', 'l1', 'cmdi/level1.php?cmd=127.0.0.1'],
             ['L2', '参数位置变化', 'nslookup $input (参数位)', 'l2', 'cmdi/level2.php?cmd=localhost'],
-            ['L3', '嵌套执行', 'echo "$(cmd $input)"', 'l3', 'cmdi/level3.php?cmd=date'],
-            ['L4', 'PATH 环境变量投毒', 'putenv + 命令执行', 'l4', 'cmdi/level4.php?cmd=ls'],
-            ['L5', '无回显 OOB 外带', '>输出重定向到/dev/null', 'l5', 'cmdi/level5.php?cmd=127.0.0.1'],
         ];
         foreach ($cmdiLevels as [$tag, $title, $desc, $cls, $link]) {
             echo "<a href='$link' class='card'>";
@@ -132,11 +126,8 @@
     <div class="levels">
         <?php
         $uploadLevels = [
-            ['L1', '基础上传', '保存到uploads/，保留原名', 'l2', 'upload/level1.php'],
-            ['L2', '目录可控', 'uploads/$dir/$filename', 'l3', 'upload/level2.php'],
-            ['L3', 'Content-Type 可控', '按MIME分目录', 'l3', 'upload/level3.php'],
-            ['L4', '文件名编码截断', 'UTF-8→GBK转换', 'l4', 'upload/level4.php'],
-            ['L5', '条件竞争', '先.tmp→重命名.php', 'l5', 'upload/level5.php'],
+            ['L1', '基础上传', '保存到uploads/，保留原名', 'l1', 'upload/level1.php'],
+            ['L2', '条件竞争', '先.tmp→重命名.php', 'l2', 'upload/level2.php'],
         ];
         foreach ($uploadLevels as [$tag, $title, $desc, $cls, $link]) {
             echo "<a href='$link' class='card'>";

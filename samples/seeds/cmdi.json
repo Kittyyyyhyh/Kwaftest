@@ -198,41 +198,5 @@
     "url_params": {
       "cmd": "${payload}"
     }
-  },
-  {
-    "id": "cmdi-l3-baseline",
-    "scenario": "cmdi",
-    "level": 3,
-    "category": "baseline",
-    "name": "嵌套执行: ||whoami",
-    "payload": "||whoami",
-    "description": "echo \"$(cmd ...)\"嵌套上下文。命令执行型-无路径",
-    "verify_type": "output",
-    "verify_pattern": "www-data",
-    "applicable_transports": [
-      "direct"
-    ],
-    "http_method": "GET",
-    "url_params": {
-      "cmd": "${payload}"
-    }
-  },
-  {
-    "id": "cmdi-l4-baseline",
-    "scenario": "cmdi",
-    "level": 4,
-    "category": "baseline",
-    "name": "环境变量投毒: whoami",
-    "payload": "whoami",
-    "description": "PATH环境变量污染+命令执行",
-    "verify_type": "output",
-    "verify_pattern": "www-data",
-    "applicable_transports": [
-      "direct"
-    ],
-    "http_method": "GET",
-    "url_params": {
-      "cmd": "${payload}"
-    }
   }
 ]

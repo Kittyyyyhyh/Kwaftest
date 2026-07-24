@@ -1,7 +1,7 @@
 # WAF 语义引擎测试靶场
 
 > OWASP ModSecurity CRS Paranoia Level 4 + PHP-Apache + MySQL  
-> 15 关靶场 × 自定义 403 拦截回显 × AI 批量攻击 API × 自动报告生成
+> 6 关靶场 × 自定义 403 拦截回显 × AI 批量攻击 API × 自动报告生成
 
 ## 快速启动
 
@@ -23,34 +23,25 @@ curl "http://localhost:8090/sqli/level1.php?id=1+UNION+SELECT+1,2,3"  # → 403
               ↑ 拦截 403 + 审计日志            ↑ 纯漏洞，零防御
 ```
 
-## 靶场关卡 (15 关)
+## 靶场关卡 (6 关)
 
 ### SQL 注入
 | 关卡 | 注入上下文 | 路径 |
 |------|-----------|------|
 | L1 | 数字型 UNION | `/sqli/level1.php?id=` |
-| L2 | 字符型引号闭合 | `/sqli/level2.php?id=` |
-| L3 | LIKE 搜索型 | `/sqli/level3.php?id=` |
-| L4 | ORDER BY 排序型 | `/sqli/level4.php?id=` |
-| L5 | 无回显布尔盲注 | `/sqli/level5.php?id=` |
+| L2 | ORDER BY 排序型 | `/sqli/level2.php?id=` |
 
 ### 命令注入
 | 关卡 | 注入上下文 | 路径 |
 |------|-----------|------|
 | L1 | 基础命令拼接 | `/cmdi/level1.php?cmd=` |
 | L2 | 参数位注入 | `/cmdi/level2.php?cmd=` |
-| L3 | 嵌套执行 | `/cmdi/level3.php?cmd=` |
-| L4 | PATH 环境变量投毒 | `/cmdi/level4.php?cmd=&path=` |
-| L5 | 无回显 OOB 外带 | `/cmdi/level5.php?cmd=` |
 
 ### 文件上传
 | 关卡 | 上传上下文 | 路径 |
 |------|-----------|------|
 | L1 | 基础上传 | `/upload/level1.php` |
-| L2 | 目录可控 | `/upload/level2.php` |
-| L3 | Content-Type 可控 | `/upload/level3.php` |
-| L4 | 文件名编码截断 | `/upload/level4.php` |
-| L5 | 条件竞争 (TOCTOU) | `/upload/level5.php` |
+| L2 | 条件竞争 (TOCTOU) | `/upload/level2.php` |
 
 ## 手测反馈
 
@@ -87,9 +78,9 @@ PYTHONIOENCODING=utf-8 python scripts/generate_report.py
 
 ```
 ├── app/                    # 靶场 PHP 应用（零防御）
-│   ├── sqli/               # SQL 注入 5 关
-│   ├── cmdi/               # 命令注入 5 关
-│   ├── upload/             # 文件上传 5 关
+│   ├── sqli/               # SQL 注入 2 关
+│   ├── cmdi/               # 命令注入 2 关
+│   ├── upload/             # 文件上传 2 关
 │   ├── api/                # 批量攻击 API + 样本导出
 │   ├── error/403.php       # 自定义 403 页面（动态规则回显）
 │   ├── success-banner.php  # 攻击成功横幅组件

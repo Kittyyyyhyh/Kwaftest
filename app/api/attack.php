@@ -136,10 +136,17 @@ if ($wafBlocked) {
     $wafRuleMsg = 'WAF Blocked (CRS PL4)';
     $auditLog = '/var/log/waf/audit.log';
     if (file_exists($auditLog) && is_readable($auditLog)) {
-        $lines = file($auditLog, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if ($lines) {
-            for ($i = count($lines) - 1; $i >= 0; $i--) {
-                $entry = json_decode($lines[$i], true);
+        $fp = fopen($auditLog, 'r');
+        if ($fp) {
+            fseek($fp, -min(filesize($auditLog), 500000), SEEK_END);
+            fgets($fp);
+            $tail = stream_get_contents($fp);
+            fclose($fp);
+            $lines = array_filter(explode("
+", $tail));
+            $lines = array_reverse($lines);
+            foreach ($lines as $line) {
+                $entry = json_decode($line, true);
                 if ($entry && ($entry['response']['status'] ?? 0) == 403) {
                     $msgs = $entry['audit_data']['messages'] ?? [];
                     $ids = [];
