@@ -12,9 +12,9 @@ from scripts.lib.transport import check_success
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(BASE, "logs", "probe_cache.json")
 
-# 对照基准 — 已验证能绕过WAF的技法和目标
-CONTROL_TECHNIQUE = "semi"      # ; 已验证绕过
-CONTROL_TARGET = "id"           # id 已验证绕过
+# 对照基准 — 每类两个，互相验证
+CONTROL_TECHS = ["semi", "pipe"]          # ; 和 | 已验证绕过
+CONTROL_TARGETS = ["id", "P2-db"]         # id(命令) 和 P2-db(文件) 已验证绕过
 
 
 def _send(scenario, payload, tgt, base_url):
@@ -44,35 +44,53 @@ def run(scenario: str, cache_path: str = CACHE, base_url: str = "http://localhos
     techs = json.load(open(os.path.join(BASE, "samples","techniques",f"{scenario}.json"), encoding="utf-8"))
     targets = json.load(open(os.path.join(BASE, "samples","targets",f"{scenario}.json"), encoding="utf-8"))
     tg_map = {t["id"]: t for t in targets}
-    control_tgt = tg_map.get(CONTROL_TARGET, targets[-1])
-    control_tech = next((t for t in techs if t["id"] == CONTROL_TECHNIQUE), techs[0])
+    ctrl_tgts = [tg_map.get(c, targets[-1]) for c in CONTROL_TARGETS]
+    ctrl_techs_list = [next((t for t in techs if t["id"] == c), techs[0]) for c in CONTROL_TECHS]
 
     total_cells = len(techs) * len(targets)
     probes_run = 0
 
-    # ====== 阶段A: 技法对照 (每个技法 × 无害目标id) ======
-    print(f"阶段A: 技法对照 (×{CONTROL_TARGET})")
+    # ====== 阶段A: 技法对照 (双目标验证) ======
+    print(f"阶段A: 技法对照 (×{CONTROL_TARGETS[0]} + ×{CONTROL_TARGETS[1]})")
+    tech_results = {}
     blocked_techs = set()
     for tech in techs:
-        payload = tech["template"].replace("{PAYLOAD}", control_tgt["payload"])
-        result = _send(scenario, payload, control_tgt, base_url)
-        probes_run += 1
-        icon = "[X]" if result == "BLOCKED" else "[O]"
-        if result == "BLOCKED":
+        results = []
+        for ctrl_tgt in ctrl_tgts:
+            p = tech["template"].replace("{PAYLOAD}", ctrl_tgt["payload"])
+            r = _send(scenario, p, ctrl_tgt, base_url)
+            probes_run += 1
+            results.append(r)
+        tech_results[tech["id"]] = results
+        # 两个对照都拦 → 确定是技法被识破
+        if results[0] == "BLOCKED" and results[1] == "BLOCKED":
             blocked_techs.add(tech["id"])
-        print(f"  {icon} {tech['name']:<6} → {result}")
+            icon = "[X]"
+        elif results[0] == "BLOCKED" or results[1] == "BLOCKED":
+            icon = "[?]"  # 不一致，保留但标记
+        else:
+            icon = "[O]"
+        print(f"  {icon} {tech['name']:<6} → {results[0]:<8} {results[1]:<8}")
 
-    # ====== 阶段B: 目标对照 (安全技法; × 每个目标) ======
-    print(f"\n阶段B: 目标对照 (×{control_tech['name']})")
+    # ====== 阶段B: 目标对照 (双技法验证) ======
+    print(f"\n阶段B: 目标对照 (×{CONTROL_TECHS[0]} + ×{CONTROL_TECHS[1]})")
     blocked_targets = set()
     for tgt in targets:
-        payload = control_tech["template"].replace("{PAYLOAD}", tgt["payload"])
-        result = _send(scenario, payload, tgt, base_url)
-        probes_run += 1
-        icon = "[X]" if result == "BLOCKED" else "[O]"
-        if result == "BLOCKED":
+        results = []
+        for ctrl_tech in ctrl_techs_list:
+            p = ctrl_tech["template"].replace("{PAYLOAD}", tgt["payload"])
+            r = _send(scenario, p, tgt, base_url)
+            probes_run += 1
+            results.append(r)
+        # 两个技法都拦 → 确定是目标被保护
+        if results[0] == "BLOCKED" and results[1] == "BLOCKED":
             blocked_targets.add(tgt["id"])
-        print(f"  {icon} {tgt['id']:<14} → {result}")
+            icon = "[X]"
+        elif results[0] == "BLOCKED" or results[1] == "BLOCKED":
+            icon = "[?]"
+        else:
+            icon = "[O]"
+        print(f"  {icon} {tgt['id']:<14} → {results[0]:<8} {results[1]:<8}")
 
     # ====== 阶段C: 安全技法 × 安全目标 ======
     safe_techs = [t for t in techs if t["id"] not in blocked_techs]
