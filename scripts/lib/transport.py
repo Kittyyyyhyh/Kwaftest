@@ -52,7 +52,6 @@ def verify_attack(verify_config: dict, response_body: str) -> tuple:
         return (None, False)
 
     elif vtype == "side_effect":
-        # 副作用验证: 事后进容器检查
         import subprocess
         action = verify_config.get("action", "")
         path = verify_config.get("path", "")
@@ -152,9 +151,22 @@ def transport_direct(sample_dict: dict, run_id: str = "") -> dict:
         url = f"{BASE_URL}{target}"
         resp = requests.get(url, params=params, timeout=DEFAULT_TIMEOUT, allow_redirects=False)
 
+        # 前置处理: side_effect需要先准备文件状态
+        verify_config = sample_dict.get("verify", {"type": "honeytoken"})
+        pre_setup = verify_config.get("pre_setup", {})
+        if pre_setup:
+            import subprocess
+            try:
+                if pre_setup.get("action") == "file_delete":
+                    subprocess.run(["docker", "exec", "waf-app", "rm", "-f", pre_setup["path"]], capture_output=True, timeout=5)
+                elif pre_setup.get("action") == "file_create":
+                    c = pre_setup.get("content", "")
+                    subprocess.run(["docker", "exec", "waf-app", "sh", "-c", f"echo '{c}' > {pre_setup['path']}"], capture_output=True, timeout=5)
+            except Exception:
+                pass
+
         body = resp.text or ""
         blocked = (resp.status_code == 403)
-        verify_config = sample_dict.get("verify", {"type": "honeytoken"})
         flag, verified = verify_attack(verify_config, body)
 
         return {

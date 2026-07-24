@@ -12,5 +12,11 @@
   {"id": "whoami",      "cmd":  "whoami",                    "tier": "CMD","severity": "L1",
    "verify": {"type": "output", "pattern": "www-data"}},
   {"id": "id",          "cmd":  "id",                        "tier": "CMD","severity": "L1",
-   "verify": {"type": "output", "pattern": "uid="}}
+   "verify": {"type": "output", "pattern": "uid="}},
+  {"id": "touch-php",   "cmd":  "touch", "path": "/srv/app/created.php",  "tier": "P1","severity": "L3",
+   "verify": {"type": "side_effect", "action": "file_exists", "path": "/srv/app/created.php", "expected": true,
+              "pre_setup": {"action": "file_delete", "path": "/srv/app/created.php"}}},
+  {"id": "rm-db",       "cmd":  "rm",    "path": "/srv/data/db.json",    "tier": "P2","severity": "L3",
+   "verify": {"type": "side_effect", "action": "file_exists", "path": "/srv/data/db.json", "expected": false,
+              "pre_setup": {"action": "file_create", "path": "/srv/data/db.json", "content": "touch-me"}}}
 ]

@@ -35,6 +35,20 @@ def run(scenario: str, cache_path: str = CACHE, base_url: str = "http://localhos
             url_param = tgt.get("url_param", "cmd" if scenario == "cmdi" else "id")
             level = tgt.get("level", 1)
             encoded = urllib.parse.quote(payload, safe="")
+
+            # 前置处理: side_effect需要先准备文件状态
+            pre_setup = tgt.get("verify", {}).get("pre_setup", {})
+            if pre_setup:
+                try:
+                    import subprocess
+                    if pre_setup.get("action") == "file_delete":
+                        subprocess.run(["docker", "exec", "waf-app", "rm", "-f", pre_setup["path"]], capture_output=True, timeout=5)
+                    elif pre_setup.get("action") == "file_create":
+                        c = pre_setup.get("content", "")
+                        subprocess.run(["docker", "exec", "waf-app", "sh", "-c", f"echo '{c}' > {pre_setup['path']}"], capture_output=True, timeout=5)
+                except Exception:
+                    pass
+
             try:
                 resp = requests.get(f"{base_url}/{scenario}/level{level}.php?{url_param}={encoded}",
                                     timeout=5, allow_redirects=False)
