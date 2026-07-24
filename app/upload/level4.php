@@ -3,7 +3,8 @@
  * 文件上传 L4 - 文件名编码截断
  * 上传上下文: 对文件名做 UTF-8 → GBK 编码转换后保存
  * WAF难点: 编码转换导致"WAF看到的字节"≠"文件系统解释的字节"
- * 成功标志: 利用 GBK 截断上传 .php 文件，读取 /flag.txt 第四行
+ * 蜜标位置: /app/logs/access.log (hp-c2d5f8a3)
+ * 成功标志: 上传 webshell 后读取蜜标文件
  *
  * 关键: 某些多字节字符在 GBK 转换后会吃掉后面的字节
  * 例如: 0xC0 0xAE → GBK 解码 → 替换为 ?  → 截断效果
@@ -53,7 +54,7 @@ $cmdOutput = $message;
     <h2>🔫 文件上传 L4 — 文件名编码截断</h2>
     <div class="info">
         <strong>说明:</strong> 上传文件后对文件名做 UTF-8 → GBK 编码转换。编码差异可导致后缀截断。<br>
-        <strong>目标:</strong> 上传 PHP webshell，读取 <code>/flag.txt</code> 的第四行 flag<br>
+        <strong>目标:</strong> 上传 PHP webshell，读取 <code>/app/logs/access.log</code> 获取蜜标 hp-c2d5f8a3<br>
         <strong>编码链:</strong> <span class="code">UTF-8 文件名 → iconv → GBK → 文件系统保存</span><br>
         <strong>提示:</strong> filename=<code>shell.php%c0%ae.jpg</code>，GBK 解码后 %c0%ae 可能截断 .jpg<br>
         <strong>注意:</strong> Linux 环境下 GBK 截断效果不同于 Windows

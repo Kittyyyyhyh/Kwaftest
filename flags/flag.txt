@@ -1,5 +1,0 @@
-flag{cmdi_l1_b4s1c_1nj3ct10n}
-flag{cmdi_l2_p4r4m_1nj3ct}
-flag{cmdi_l3_n3st3d_3x3c}
-flag{cmdi_l4_3nv_v4r_p01s0n}
-flag{cmdi_l5_00b_3xf1ltr4t10n}

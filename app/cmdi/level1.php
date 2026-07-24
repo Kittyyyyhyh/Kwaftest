@@ -3,7 +3,8 @@
  * 命令注入 L1 - 基础拼接
  * 注入上下文: ping -c 1 $input (直接拼接命令)
  * WAF难点: 经典分隔符注入，; | & 等会被 CRS PL4 拦截
- * 成功标志: 读取 /flag.txt 第一行 flag{cmdi_l1_b4s1c_1nj3ct10n}
+ * 蜜标位置: /app/config/db.php (hp-4f8a2c1b)
+ * 成功标志: 输出中包含蜜标 hp-[0-9a-f]{8}
  */
 
 $cmd = $_GET['cmd'] ?? '127.0.0.1';
@@ -34,7 +35,7 @@ $cmdOutput = $output ?? '';
     <h2>🔫 命令注入 L1 — 基础拼接</h2>
     <div class="info">
         <strong>说明:</strong> Ping 工具。参数 <code>cmd</code> 直接拼入 shell 命令。<br>
-        <strong>目标:</strong> 读取 <code>/flag.txt</code> 文件<br>
+        <strong>目标:</strong> 读取 <code>/app/config/db.php</code> 获取蜜标 hp-4f8a2c1b<br>
         <strong>命令:</strong> <span class="code">ping -c 1 <?php echo htmlspecialchars($cmd); ?></span>
     </div>
 

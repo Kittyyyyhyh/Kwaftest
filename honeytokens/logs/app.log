@@ -1,0 +1,4 @@
+[2026-07-20 03:15:42] DEBUG: Session created for user admin (token=hp-6c8f2e4a)
+[2026-07-20 03:15:43] DEBUG: Database connection established (pool_size=10)
+[2026-07-20 03:15:44] INFO: Application booted in 2.3s
+[2026-07-20 08:22:11] WARN: Rate limit exceeded for IP 192.168.1.200

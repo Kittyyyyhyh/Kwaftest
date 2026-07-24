@@ -3,7 +3,8 @@
  * SQL注入 L5 - 无回显布尔盲注
  * 注入上下文: WHERE id=$id (数字型，无回显数据，只返回"存在/不存在")
  * WAF难点: 无UNION、无报错回显，纯盲注。WAF 检测链短，是语义引擎的先天盲区
- * 成功标志: 逐字符盲注读取 flag{sqli_l5_pur3_bl1nd}
+ * 蜜标位置: sqli_l5_vip.access_key WHERE id=1 (hp-b9d1f3c5)
+ * 成功标志: 输出中包含蜜标 hp-[0-9a-f]{8}
  */
 
 require_once '../config.php';
@@ -12,7 +13,7 @@ $conn = getDBConnection();
 $id = $_GET['id'] ?? 1;
 
 // ⚠️ 纯漏洞代码，不做任何过滤
-$sql = "SELECT id FROM sqli_l5_blind WHERE id=$id";
+$sql = "SELECT id FROM sqli_l5_vip WHERE id=$id";
 $result = mysqli_query($conn, $sql);
 
 $attackRows = [];
@@ -42,9 +43,9 @@ $userExists = ($result && mysqli_num_rows($result) > 0);
     <h2>🔫 SQL注入 L5 — 无回显布尔盲注</h2>
     <div class="info">
         <strong>说明:</strong> 用户查询，只返回"存在"或"不存在"，无任何数据回显。<br>
-        <strong>目标:</strong> 通过布尔盲注逐字符读取 <code>flags</code> 表中的 flag<br>
-        <strong>SQL:</strong> <span class="sql">SELECT id FROM sqli_l5_blind WHERE id=<?php echo htmlspecialchars($id); ?></span><br>
-        <strong>提示:</strong> 使用 <code>AND SUBSTRING((SELECT flag FROM flags WHERE challenge='sqli_l5'),N,1)='X'</code> 逐字符判断
+        <strong>目标:</strong> 通过布尔盲注逐字符读取 <code>sqli_l5_vip.access_key WHERE id=1</code> 获取蜜标 hp-b9d1f3c5<br>
+        <strong>SQL:</strong> <span class="sql">SELECT id FROM sqli_l5_vip WHERE id=<?php echo htmlspecialchars($id); ?></span><br>
+        <strong>提示:</strong> 使用 <code>AND SUBSTRING((SELECT access_key FROM sqli_l5_vip WHERE username='vip_admin'),N,1)='X'</code> 逐字符判断
     </div>
 
     <form method="GET">

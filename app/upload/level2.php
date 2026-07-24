@@ -3,7 +3,8 @@
  * 文件上传 L2 - 目录可控
  * 上传上下文: uploads/$dir/$filename，目录名由用户表单传入
  * WAF难点: 路径穿越 + 上传组合，WAF 对多层路径语义理解弱
- * 成功标志: 上传 PHP webshell 到可访问路径，读取 /flag.txt 第二行
+ * 蜜标位置: /app/config/app.conf (hp-7d3b9e1f)
+ * 成功标志: 上传 webshell 后读取蜜标文件
  */
 
 $message = '';
@@ -50,7 +51,7 @@ $cmdOutput = $message;
     <h2>🔫 文件上传 L2 — 目录可控</h2>
     <div class="info">
         <strong>说明:</strong> 上传文件到用户指定的子目录。<br>
-        <strong>目标:</strong> 上传 PHP webshell，读取 <code>/flag.txt</code> 的第二行 flag<br>
+        <strong>目标:</strong> 上传 PHP webshell，读取 <code>/app/config/app.conf</code> 获取蜜标 hp-7d3b9e1f<br>
         <strong>路径:</strong> <span class="code">uploads/<?php echo htmlspecialchars($_POST['dir'] ?? '[dir]'); ?>/[filename]</span><br>
         <strong>提示:</strong> 利用目录穿越和特殊目录名（如空格、..、null字节）绕过限制
     </div>

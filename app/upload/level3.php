@@ -3,7 +3,8 @@
  * 文件上传 L3 - Content-Type 可控
  * 上传上下文: 根据 Content-Type 决定存储目录
  * WAF难点: 伪造 MIME + PHP 内容，WAF 需同时校验声明和实际
- * 成功标志: 上传 PHP webshell 到 images 目录并执行，读取 /flag.txt 第三行
+ * 蜜标位置: /app/config/.env (hp-e9a1b3d5)
+ * 成功标志: 上传 webshell 后读取蜜标文件
  */
 
 $message = '';
@@ -58,8 +59,9 @@ $cmdOutput = $message;
     <h2>🔫 文件上传 L3 — Content-Type 可控</h2>
     <div class="info">
         <strong>说明:</strong> 根据上传文件的 Content-Type 分目录存储。但 Content-Type 来自客户端，完全可控。<br>
-        <strong>目标:</strong> 上传 PHP webshell，读取 <code>/flag.txt</code> 的第三行 flag<br>
+        <strong>目标:</strong> 上传 PHP webshell，读取 <code>/app/config/.env</code> 获取蜜标 hp-e9a1b3d5<br>
         <strong>提示:</strong> 用 Burp Suite 或 curl 修改 Content-Type 为 image/png，内容为 PHP 代码<br>
+        <strong>注意:</strong> .env 是隐藏文件，webshell 需用 <code>cat /app/config/.env</code> 读取<br>
         <code>curl -F "file=@shell.php;type=image/png" http://localhost:8000/upload/level3.php</code>
     </div>
 

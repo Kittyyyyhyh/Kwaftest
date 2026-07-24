@@ -1,0 +1,101 @@
+[
+  {
+    "id": "url",
+    "name": "URL Encoding",
+    "encode_function": "url_encode",
+    "nestable": true,
+    "applicable_scenarios": ["sqli", "cmdi"],
+    "description": "标准百分号编码，对非字母数字字符进行转义",
+    "waf_relevance": "测试WAF是否在规则匹配前做URL解码。CRS PL4默认解码一层"
+  },
+  {
+    "id": "double_url",
+    "name": "Double URL Encoding",
+    "encode_function": "double_url_encode",
+    "nestable": true,
+    "applicable_scenarios": ["sqli", "cmdi"],
+    "description": "两轮URL编码。% → %25，所以 ' 变成 %2527",
+    "waf_relevance": "测试WAF递归解码深度。部分WAF只解码一层，%2527被当作无害的%25+27"
+  },
+  {
+    "id": "base64_cmd",
+    "name": "Base64 Command Encoding",
+    "encode_function": "base64_cmd_encode",
+    "nestable": false,
+    "applicable_scenarios": ["cmdi"],
+    "description": "将命令Base64编码，shell端通过管道解码执行: echo BASE64|base64 -d|sh",
+    "waf_relevance": "WAF看到Base64无害字符串，看不到真实命令。攻击语义仅在shell侧恢复"
+  },
+  {
+    "id": "hex_encoding",
+    "name": "Hexadecimal Encoding",
+    "encode_function": "hex_encode",
+    "nestable": true,
+    "applicable_scenarios": ["sqli", "cmdi"],
+    "description": "将字符编码为0xNN十六进制形式(MySQL兼容)",
+    "waf_relevance": "MySQL解析0xNN十六进制字符串，WAF字节级匹配可能失配"
+  },
+  {
+    "id": "unicode_escape",
+    "name": "Unicode Escape",
+    "encode_function": "unicode_escape_encode",
+    "nestable": true,
+    "applicable_scenarios": ["sqli", "cmdi"],
+    "description": "\\uXXXX Unicode转义序列",
+    "waf_relevance": "PHP/MySQL在某些上下文中解析Unicode转义，WAF的字节级正则无法匹配"
+  },
+  {
+    "id": "html_entity",
+    "name": "HTML Entity Encoding",
+    "encode_function": "html_entity_encode",
+    "nestable": true,
+    "applicable_scenarios": ["sqli", "cmdi"],
+    "description": "将字符编码为&#xNN; HTML十六进制实体",
+    "waf_relevance": "HTML实体在HTTP上下文中可能被浏览器解码，WAF对不同编码标准的覆盖不完整"
+  },
+  {
+    "id": "octal",
+    "name": "Octal Encoding",
+    "encode_function": "octal_encode",
+    "nestable": true,
+    "applicable_scenarios": ["cmdi"],
+    "description": "将命令编码为\\OOO八进制形式(shell兼容)",
+    "waf_relevance": "Shell支持\\ooo八进制转义，WAF很少覆盖八进制编码"
+  },
+  {
+    "id": "js_escape",
+    "name": "JavaScript Escape",
+    "encode_function": "js_escape_encode",
+    "nestable": true,
+    "applicable_scenarios": ["sqli", "cmdi"],
+    "description": "\\xNN JavaScript十六进制转义",
+    "waf_relevance": "JS转义在JSON/JS上下文中会被解码，WAF需理解多层解析器"
+  },
+  {
+    "id": "whitespace_random",
+    "name": "Random Whitespace Substitution",
+    "encode_function": "whitespace_random_encode",
+    "nestable": true,
+    "applicable_scenarios": ["sqli"],
+    "description": "将空格随机替换为制表符/换行/注释等空白变体",
+    "waf_relevance": "破坏依赖空格分隔的规则签名，但SQL解析器仍将其视为空白"
+  },
+  {
+    "id": "case_random",
+    "name": "Random Case Flipping",
+    "encode_function": "case_random_encode",
+    "nestable": true,
+    "applicable_scenarios": ["sqli", "cmdi"],
+    "description": "随机翻转SQL关键字的字母大小写，如 SeLeCt",
+    "waf_relevance": "大小写敏感的低质量WAF规则会被绕过。CRS PL4默认不区分大小写"
+  },
+  {
+    "id": "comment_inline",
+    "name": "Inline Comment Injection",
+    "encode_function": "comment_inline_encode",
+    "nestable": true,
+    "applicable_scenarios": ["sqli"],
+    "description": "在SQL关键字内部插入内联注释，如 /**/UN/**/ION",
+    "waf_relevance": "破坏WAF的连续关键词匹配，但MySQL内核仍能解析"
+  }
+]

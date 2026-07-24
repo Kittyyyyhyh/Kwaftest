@@ -158,8 +158,8 @@ if ($wafBlocked) {
 // 检查是否拿到 flag
 $flag = null;
 if (!$wafBlocked && $response !== false) {
-    if (preg_match('/flag\{([^}]+)\}/', $response, $m)) {
-        $flag = 'flag{' . $m[1] . '}';
+    if (preg_match_all('/hp-[0-9a-f]{8}/', $response, $m)) {
+        $flag = end($m[0]);
     }
 }
 

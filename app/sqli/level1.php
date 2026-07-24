@@ -3,7 +3,8 @@
  * SQL注入 L1 - 数字型联合查询
  * 注入上下文: WHERE id=$id (数字型，无引号)
  * WAF难点: 基础 UNION SELECT 特征明显，PL4 直接拦截
- * 成功标志: 读取 flags 表中的 flag{sqli_l1_un10n_s3l3ct}
+ * 蜜标位置: sqli_l1_users.email WHERE id=4 (hp-3a5c7e9b)
+ * 成功标志: 输出中包含蜜标 hp-[0-9a-f]{8}
  */
 
 require_once '../config.php';
@@ -46,7 +47,7 @@ if ($result) {
     <h2>🔫 SQL注入 L1 — 数字型联合查询</h2>
     <div class="info">
         <strong>说明:</strong> 根据用户 ID 查询信息。参数 <code>id</code> 为数字，直接拼入 SQL。<br>
-        <strong>目标:</strong> 读取 <code>flags</code> 表中的 flag<br>
+        <strong>目标:</strong> 通过 UNION SELECT 读取 <code>sqli_l1_users.email WHERE id=4</code> 获取蜜标 hp-3a5c7e9b<br>
         <strong>SQL:</strong> <span class="sql">SELECT id, username, email, role FROM sqli_l1_users WHERE id=<?php echo htmlspecialchars($id); ?></span>
     </div>
 

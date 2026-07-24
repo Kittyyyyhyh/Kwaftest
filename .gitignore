@@ -3,13 +3,22 @@ db_data/
 
 # Logs & Reports (generated at runtime)
 logs/*
-reports/*
 !logs/.gitkeep
+reports/*
 !reports/.gitkeep
+
+# Generated samples (runtime artifacts)
+samples/batches/*
+!samples/batches/.gitkeep
+samples/results/*
+!samples/results/.gitkeep
 
 # Uploaded files (runtime)
 app/uploads/*
 !app/uploads/.gitkeep
+
+# Old flag system (replaced by honeytokens)
+flags/
 
 # IDE
 .vscode/

@@ -3,7 +3,8 @@
  * SQL注入 L3 - LIKE 搜索型
  * 注入上下文: WHERE title LIKE '%$id%' (LIKE 模糊搜索，百分号包裹)
  * WAF难点: LIKE 上下文 + % 通配符干扰，WAF 规则对 LIKE 注入耦合度低
- * 成功标志: 读取 flags 表中的 flag{sqli_l3_l1k3_byp4ss}
+ * 蜜标位置: sqli_l3_articles.content WHERE id=4 (hp-9e6b1d3f)
+ * 成功标志: 输出中包含蜜标 hp-[0-9a-f]{8}
  */
 
 require_once '../config.php';
@@ -41,7 +42,7 @@ if ($result) { while ($row = mysqli_fetch_assoc($result)) { $attackRows[] = $row
     <h2>🔫 SQL注入 L3 — LIKE 搜索型</h2>
     <div class="info">
         <strong>说明:</strong> 文章搜索功能。参数 <code>id</code> 被 LIKE 模糊匹配。此关同时支持 <code>mysqli_multi_query</code>。<br>
-        <strong>目标:</strong> 读取 <code>flags</code> 表中的 flag<br>
+        <strong>目标:</strong> 通过 UNION SELECT 读取 <code>sqli_l3_articles.content WHERE id=4</code> 获取蜜标 hp-9e6b1d3f<br>
         <strong>SQL:</strong> <span class="sql">SELECT id, title, author FROM sqli_l3_articles WHERE title LIKE '%<?php echo htmlspecialchars($id); ?>%'</span>
     </div>
 

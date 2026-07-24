@@ -3,7 +3,8 @@
  * 命令注入 L2 - 参数位置变化
  * 注入上下文: nslookup $input 2>&1 (参数位注入，非命令位)
  * WAF难点: 注入点在工具参数位而非命令本身，WAF 需要理解 shell 语法树
- * 成功标志: 读取 /flag.txt 第二行 flag{cmdi_l2_p4r4m_1nj3ct}
+ * 蜜标位置: /app/config/app.conf (hp-7d3b9e1f)
+ * 成功标志: 输出中包含蜜标 hp-[0-9a-f]{8}
  */
 
 $cmd = $_GET['cmd'] ?? 'localhost';
@@ -32,7 +33,7 @@ $cmdOutput = $output ?? '';
     <h2>🔫 命令注入 L2 — 参数位置变化</h2>
     <div class="info">
         <strong>说明:</strong> DNS 查询工具。参数 <code>cmd</code> 在 nslookup 的参数位置。<br>
-        <strong>目标:</strong> 读取 <code>/flag.txt</code> 文件<br>
+        <strong>目标:</strong> 读取 <code>/app/config/app.conf</code> 获取蜜标 hp-7d3b9e1f<br>
         <strong>命令:</strong> <span class="code">nslookup <?php echo htmlspecialchars($cmd); ?> 2>&1</span><br>
         <strong>提示:</strong> 使用反引号 `` ` `` 或 <code>$()</code> 在参数中嵌套执行命令
     </div>

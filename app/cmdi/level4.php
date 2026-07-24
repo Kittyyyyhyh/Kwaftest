@@ -3,7 +3,8 @@
  * 命令注入 L4 - 环境变量注入
  * 注入上下文: PATH 环境变量被污染后执行命令
  * WAF难点: 环境变量投毒是间接攻击，WAF 建模的是输入→输出，非环境侧信道
- * 成功标志: 读取 /flag.txt 第四行 flag{cmdi_l4_3nv_v4r_p01s0n}
+ * 蜜标位置: /app/logs/access.log (hp-c2d5f8a3)
+ * 成功标志: 输出中包含蜜标 hp-[0-9a-f]{8}
  */
 
 $cmd = $_GET['cmd'] ?? 'ls';
@@ -39,7 +40,7 @@ $cmdOutput = $output ?? '';
     <h2>🔫 命令注入 L4 — 环境变量投毒</h2>
     <div class="info">
         <strong>说明:</strong> 执行系统命令，同时可以设置 PATH 环境变量。PATH 污染可导致命令劫持。<br>
-        <strong>目标:</strong> 读取 <code>/flag.txt</code> 文件<br>
+        <strong>目标:</strong> 读取 <code>/app/logs/access.log</code> 获取蜜标 hp-c2d5f8a3<br>
         <strong>PATH:</strong> <span class="code"><?php echo htmlspecialchars(getenv('PATH')); ?></span><br>
         <strong>提示:</strong> PATH 注入 + 命令注入组合使用。也可以直接注入 cmd 参数执行 cat 等命令
     </div>

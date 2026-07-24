@@ -3,7 +3,9 @@
  * 命令注入 L3 - 嵌套执行
  * 注入上下文: echo "$(cmd $input)" (反引号/$() 嵌套)
  * WAF难点: 命令替换语法 $() 和 `` 是 shell 内置，WAF 对语法糖覆盖不全
- * 成功标志: 读取 /flag.txt 第三行 flag{cmdi_l3_n3st3d_3x3c}
+ * 蜜标位置: /app/config/.env (hp-e9a1b3d5)
+ * 注意: .env 是隐藏文件，需要 ls -la 或直接 cat 完整路径
+ * 成功标志: 输出中包含蜜标 hp-[0-9a-f]{8}
  */
 
 $cmd = $_GET['cmd'] ?? 'date';
@@ -33,7 +35,8 @@ $cmdOutput = $output ?? '';
     <h2>🔫 命令注入 L3 — 嵌套执行</h2>
     <div class="info">
         <strong>说明:</strong> 自定义命令执行器，通过 echo + $() 嵌套执行。<br>
-        <strong>目标:</strong> 读取 <code>/flag.txt</code> 文件<br>
+        <strong>目标:</strong> 读取 <code>/app/config/.env</code> 获取蜜标 hp-e9a1b3d5<br>
+        <strong>注意:</strong> .env 是隐藏文件，需要 <code>ls -la</code> 或 <code>cat /app/config/.env</code> 直接读取<br>
         <strong>命令:</strong> <span class="code">echo "$(cmd <?php echo htmlspecialchars($cmd); ?>)"</span><br>
         <strong>提示:</strong> 利用 <code>$IFS</code> (内部字段分隔符) 替代空格，用通配符替代关键字
     </div>

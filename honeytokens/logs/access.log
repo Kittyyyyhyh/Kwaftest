@@ -1,0 +1,5 @@
+192.168.1.100 - admin [15/Jul/2026:08:23:41 +0000] "GET /admin/dashboard HTTP/1.1" 200 4521
+192.168.1.100 - admin [15/Jul/2026:08:24:03 +0000] "POST /admin/users/edit HTTP/1.1" 302 128
+192.168.1.105 - operator [15/Jul/2026:08:25:12 +0000] "GET /reports/monthly HTTP/1.1" 200 8923
+10.0.2.15 - system [15/Jul/2026:08:26:00 +0000] "GET /health HTTP/1.1" 200 45
+# trace_id: hp-c2d5f8a3

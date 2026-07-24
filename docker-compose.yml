@@ -30,7 +30,15 @@ services:
         condition: service_healthy
     volumes:
       - ./app:/var/www/html
-      - ./flags/flag.txt:/flag.txt:ro
+      - ./honeytokens/config/db.php:/app/config/db.php:ro
+      - ./honeytokens/config/app.conf:/app/config/app.conf:ro
+      - ./honeytokens/config/.env:/app/config/.env:ro
+      - ./honeytokens/logs/access.log:/app/logs/access.log:ro
+      - ./honeytokens/logs/app.log:/app/logs/app.log:ro
+      - ./honeytokens/etc_motd:/etc/motd:ro
+      - ./honeytokens/etc_hostname:/etc/hostname:ro
+      - ./honeytokens/srv_db.yml:/srv/config/db.yml:ro
+      - ./honeytokens/usr_local_db.ini:/usr/local/share/db.ini:ro
       - logs_volume:/var/log/waf
     networks:
       - waf-net
