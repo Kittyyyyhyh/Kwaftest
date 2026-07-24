@@ -11,9 +11,9 @@ import sys,io,os,json,argparse
 from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from lib.models import Sample
-from lib.encoders import apply_encoding_chain, ENCODE_FUNCTIONS
-from lib.utils import load_json, write_jsonl
+from scripts.lib.models import Sample
+from scripts.lib.encoders import apply_encoding_chain, ENCODE_FUNCTIONS
+from scripts.lib.utils import load_json, write_jsonl
 
 if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
