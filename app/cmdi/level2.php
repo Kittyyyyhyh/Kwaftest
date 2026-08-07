@@ -1,10 +1,13 @@
 <?php
 /**
- * 命令注入 L2 - 参数位置变化
- * 注入上下文: nslookup $input 2>&1 (参数位注入，非命令位)
- * WAF难点: 注入点在工具参数位而非命令本身，WAF 需要理解 shell 语法树
- * 蜜标位置: /app/config/app.conf (hp-7d3b9e1f)
- * 成功标志: 输出中包含蜜标 hp-[0-9a-f]{8}
+ * CMDi L2 — nslookup $input（参数位注入）
+ * 成功标志: 命令输出中出现 flag{...}
+ *
+ * 攻击目标（同 L1）:
+ *   /srv/app/config/database.cnf    — 数据库密码
+ *   /srv/app/config/credentials.env — Stripe+Mailgun密钥
+ *   /srv/data/server_config.yml     — SSH密钥+S3凭证
+ *   /var/backups/db_dump_202607.sql — 备份用户令牌
  */
 
 $cmd = $_GET['cmd'] ?? 'localhost';
@@ -32,10 +35,11 @@ $cmdOutput = $output ?? '';
 <body>
     <h2>🔫 命令注入 L2 — 参数位置变化</h2>
     <div class="info">
-        <strong>说明:</strong> DNS 查询工具。参数 <code>cmd</code> 在 nslookup 的参数位置。<br>
-        <strong>目标:</strong> 读取 <code>/app/config/app.conf</code> 获取蜜标 hp-7d3b9e1f<br>
+        <strong>说明:</strong> DNS 查询，参数 <code>cmd</code> 在 nslookup 的参数位置（非命令位）。<br>
+        <strong>目标:</strong> 同 L1 — 读取配置文件中的敏感凭证<br>
+        <strong>成功标志:</strong> 命令输出中出现 <code>flag{...}</code><br>
         <strong>命令:</strong> <span class="code">nslookup <?php echo htmlspecialchars($cmd); ?> 2>&1</span><br>
-        <strong>提示:</strong> 使用反引号 `` ` `` 或 <code>$()</code> 在参数中嵌套执行命令
+        <strong>提示:</strong> 使用 `` ` `` 或 <code>$()</code> 在参数中嵌套执行命令
     </div>
 
     <form method="GET">

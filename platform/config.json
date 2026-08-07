@@ -1,0 +1,6 @@
+{
+  "skill_dir": ".claude/skills/semantic-mining",
+  "default_target": "tencent_waf_prod",
+  "rate": {"concurrency": 3, "min_interval_ms": 300, "jitter_ms": 150},
+  "server": {"host": "127.0.0.1", "port": 8787}
+}

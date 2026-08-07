@@ -30,14 +30,6 @@ services:
         condition: service_healthy
     volumes:
       - ./app:/var/www/html
-      # P0: CRS Layer1 路径前缀黑名单 — /etc/* 100%拦截
-      - ./honeytokens/etc_motd:/etc/motd:ro
-      - ./honeytokens/etc_hostname:/etc/hostname:ro
-      # P1: CRS Layer2 文件名黑名单 — 前缀安全，特定文件名触发
-      - ./honeytokens/srv_settings.json:/srv/app/settings.json:ro
-      - ./honeytokens/srv_data.json:/srv/app/data.xml:ro
-      # P2: CRS 全放行 — /srv/* 不在任何黑名单
-      - ./honeytokens/srv_db.yml:/srv/data/db.json:ro
       - logs_volume:/var/log/waf
     networks:
       - waf-net
@@ -46,6 +38,8 @@ services:
       DB_USER: labuser
       DB_PASS: labpass_2026
       DB_NAME: waf_lab
+      JWT_SECRET: "flag{jwt_signing_key_2b6d}"
+      AWS_SECRET_ACCESS_KEY: "flag{aws_internal_key_9f1a}"
 
   waf:
     image: owasp/modsecurity-crs:apache

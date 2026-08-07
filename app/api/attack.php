@@ -61,6 +61,8 @@ $wafEnabled = ($input['waf'] ?? 'on') === 'on';
 $routes = [
     'sqli' => '/sqli/level{level}.php?id={payload}',
     'cmdi' => '/cmdi/level{level}.php?cmd={payload}',
+    'xss' => '/xss/level{level}.php?q={payload}',
+    'log4j' => null, // Log4j2 是独立 Java 容器，需特殊处理
     'upload' => null, // 文件上传需要特殊处理
 ];
 
@@ -165,7 +167,7 @@ if ($wafBlocked) {
 // 检查是否拿到 flag
 $flag = null;
 if (!$wafBlocked && $response !== false) {
-    if (preg_match_all('/hp-[0-9a-f]{8}/', $response, $m)) {
+    if (preg_match_all('/flag\{[a-z0-9_-]+\}/i', $response, $m)) {
         $flag = end($m[0]);
     }
 }

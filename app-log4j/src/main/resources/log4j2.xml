@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <!-- ⚠️ 漏洞配置: %m 直接输出用户提供的消息，Log4j2 会解析其中的 ${...} 表达式 -->
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%level] %msg%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>

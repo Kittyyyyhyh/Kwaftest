@@ -1,0 +1,88 @@
+{
+  "_meta": {
+    "name": "腾讯Mini WAF靶场",
+    "description": "OWASP ModSecurity CRS PL4 反向代理 + PHP 8.2 + MySQL 8.0",
+    "version": "1",
+    "created": "2026-07-31T00:00:00",
+    "discovery_method": "manual",
+    "notes": "此文件是 skill 体系关于目标环境的单一事实来源。迁移到新靶场时替换此文件或运行 discovery.py 重新生成。"
+  },
+
+  "target": {
+    "url_prefix": "http://localhost:8090",
+    "url_path_map": {
+      "cmdi": "cmdi",
+      "sqli": "sqli",
+      "upload": "upload",
+      "xss": "xss",
+      "log4j2": "log4j"
+    },
+    "url_page_pattern": "level{level}.php",
+    "levels": [1, 2],
+    "direct_url": null
+  },
+
+  "params": {
+    "cmdi": {
+      "level1": {"method": "GET", "name": "cmd"},
+      "level2": {"method": "GET", "name": "cmd"}
+    },
+    "sqli": {
+      "level1": {"method": "GET", "name": "id"},
+      "level2": {"method": "GET", "name": "id"}
+    },
+    "upload": {
+      "level1": {"method": "POST", "name": "file", "enctype": "multipart"},
+      "level2": {"method": "POST", "name": "file", "enctype": "multipart"}
+    },
+    "xss": {
+      "level1": {"method": "GET", "name": "q"},
+      "level2": {"method": "POST", "name": "msg", "enctype": "form"}
+    },
+    "log4j2": {
+      "level1": {"method": "GET", "name": "name"},
+      "level2": {"method": "GET", "name": null,
+        "injection": "header",
+        "header_names": ["User-Agent", "X-Forwarded-For"]}
+    }
+  },
+
+  "success": {
+    "pattern": "flag\\{[^}]+\\}",
+    "mode": "regex",
+    "baseline_strategy": "dedup",
+    "notes": "flag{...} 格式。XSS 场景的 flag 静态存在于页面中——需用 --xss-mode 豁免 flag 检测。"
+  },
+
+  "waf": {
+    "block_signals": {
+      "http_status": [403],
+      "response_headers": {"X-WAF-Blocked": "1"},
+      "response_body_patterns": ["ModSecurity", "WAF拦截", "rule-id"]
+    },
+    "score_headers": [
+      "X-WAF-Score-Total", "WAF_SCORE_TOTAL",
+      "X-WAF-Score-SQLi", "WAF_SCORE_SQLI",
+      "X-WAF-Score-XSS", "WAF_SCORE_XSS",
+      "X-WAF-Score-RCE", "WAF_SCORE_RCE",
+      "X-WAF-Score-LFI", "WAF_SCORE_LFI"
+    ],
+    "rule_id_pattern": "rule-id[\"'>]+([0-9]+)",
+    "identity": "owasp_crs_pl4"
+  },
+
+  "backend": {
+    "shell": "posix_sh",
+    "database": "mysql",
+    "app_server": "php",
+    "php_version": "8.2"
+  },
+
+  "executor": {
+    "encoding": "url_single",
+    "timeout_ms": 10000,
+    "retries": 2,
+    "concurrency": 5,
+    "python_cmd": "python3"
+  }
+}

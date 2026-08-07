@@ -74,7 +74,8 @@
     <div class="waf-badge">🔥 WAF: CRS PL4 <small>(最高防护等级)</small></div>
     <p style="margin-top:15px; color:#666; font-size:0.85em;">
         靶场不含任何防御逻辑 — 所有拦截由 ModSecurity WAF 层完成<br>
-        用于验证 WAF 语义引擎在编码绕过和语义绕过方面的能力边界
+        用于验证 WAF 语义引擎在编码绕过和语义绕过方面的能力边界<br>
+        <span style="color:#ffd700;">🎯 每个关卡隐藏一个 flag{...} —— 代表真实生产环境中的敏感凭证</span>
     </p>
 </header>
 
@@ -141,6 +142,52 @@
     </div>
 </div>
 
+<!-- XSS -->
+<div class="section">
+    <h2><span class="emoji">🎭</span> 跨站脚本 (XSS)</h2>
+    <div class="levels">
+        <?php
+        $xssLevels = [
+            ['L1', '反射型搜索', 'echo $_GET["q"] 无过滤', 'l1', 'xss/level1.php?q=test'],
+            ['L2', '存储型留言板', '留言直接echo，无输出转义', 'l2', 'xss/level2.php'],
+        ];
+        foreach ($xssLevels as [$tag, $title, $desc, $cls, $link]) {
+            echo "<a href='$link' class='card'>";
+            echo "<span class='level-tag $cls'>$tag</span>";
+            echo "<h3>$title</h3>";
+            echo "<p>$desc</p>";
+            echo "<div class='sql-preview'>→ $link</div>";
+            echo "</a>";
+        }
+        ?>
+    </div>
+</div>
+
+<!-- Log4j2 -->
+<div class="section">
+    <h2><span class="emoji">🪵</span> Log4j2 Lookup 注入</h2>
+    <div class="levels">
+        <?php
+        $log4jLevels = [
+            ['L1', 'URL 参数注入', '?name= 参数经 Log4j2 lookup 解析', 'l1', 'log4j/level1.php?name=test'],
+            ['L2', 'HTTP Header 注入', 'User-Agent / X-Forwarded-For 头注入', 'l2', 'log4j/level2.php'],
+        ];
+        foreach ($log4jLevels as [$tag, $title, $desc, $cls, $link]) {
+            echo "<a href='$link' class='card'>";
+            echo "<span class='level-tag $cls'>$tag</span>";
+            echo "<h3>$title</h3>";
+            echo "<p>$desc</p>";
+            echo "<div class='sql-preview'>→ $link</div>";
+            echo "</a>";
+        }
+        ?>
+    </div>
+    <p style="color:#888;font-size:0.82em;margin-top:12px;">
+        🔧 PHP 模拟 Log4j2 lookup 引擎 — 支持 <code>${env:}</code> <code>${java:}</code> <code>${jndi:}</code> <code>${lower:}</code> <code>${::-}</code> 等语法<br>
+        🔑 Flag 通过 <code>${env:LOG4J_FLAG_L1}</code> 语法泄露环境变量
+    </p>
+</div>
+
 <!-- API 端点 -->
 <div class="endpoints">
     <h3>🔌 API 端点（AI 批量攻击用）</h3>
@@ -158,6 +205,8 @@
         <a href="/sqli/level1.php">SQLi L1</a>
         <a href="/cmdi/level1.php">CMDi L1</a>
         <a href="/upload/level1.php">Upload L1</a>
+        <a href="/xss/level1.php">XSS L1</a>
+        <a href="/log4j/level1.php">Log4j2</a>
         <a href="/api/export.php?format=json">📊 导出样本</a>
     </div>
     <p style="margin-top:15px; font-size:0.75em; color:#444;">

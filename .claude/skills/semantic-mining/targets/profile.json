@@ -1,0 +1,51 @@
+{
+  "_meta": {
+    "name": "腾讯云WAF远程目标",
+    "description": "远程腾讯云 WAF SaaS 测试源站（纯静态，无反射无 flag）。200=WAF放行/绕过成功，403=被拦。",
+    "version": 2,
+    "created": "2026-08-03T00:00:00",
+    "discovery_method": "manual"
+  },
+  "target": {
+    "name": "tencent_waf_prod",
+    "ip": "<WAF_TARGET_IP>",
+    "host": "<WAF_TARGET_HOST>",
+    "scheme": "http",
+    "default_placement": "query",
+    "params": {"sqli": "id", "cmdi": "cmd", "xss": "q", "upload": "file", "log4j2": "name"},
+    "placements": {
+      "query":   {"method": "GET",  "url": "http://{ip}/?{param}={payload}", "quote": "url",  "host": "{host}"},
+      "path":    {"method": "GET",  "url": "http://{ip}/{payload}",          "quote": "none", "host": "{host}"},
+      "header":  {"method": "GET",  "url": "http://{ip}/",                   "quote": "none", "host": "{host}", "header": "X-Test-Input: {payload}"},
+      "ua":      {"method": "GET",  "url": "http://{ip}/",                   "quote": "none", "host": "{host}", "header": "User-Agent: {payload}"},
+      "referer": {"method": "GET",  "url": "http://{ip}/",                   "quote": "none", "host": "{host}", "header": "Referer: {payload}"},
+      "xff":     {"method": "GET",  "url": "http://{ip}/",                   "quote": "none", "host": "{host}", "header": "X-Forwarded-For: {payload}"},
+      "body":    {"method": "POST", "url": "http://{ip}/",                   "quote": "form", "host": "{host}", "body": "{param}={payload}", "ctype": "application/x-www-form-urlencoded"}
+    }
+  },
+  "block_signals": {
+    "http_status": [403],
+    "response_headers": {},
+    "body_patterns": ["您的请求已中断", "腾讯云WAF", "请求UUID", "WAF拦截页面"],
+    "body_uuid_pattern": "请求UUID：<span id=\"uuid\">([^<]+)</span>"
+  },
+  "tracking_headers": ["x-waf-uuid"],
+  "tracking_note": "X-WAF-UUID 出现在所有响应（含良性200），是请求追踪ID非拦截信号；记录它用于检测WAF规则升级/重基线",
+  "rate_limit_signals": {
+    "http_status": [429],
+    "body_patterns": ["限流", "频率", "too many requests", "rate limit"]
+  },
+  "executor": {
+    "concurrency": 3,
+    "min_interval_ms": 300,
+    "jitter_ms": 150,
+    "retries": 2,
+    "timeout_ms": 10000,
+    "max_payload_len": 2048
+  },
+  "semantic_confirmation_default": {
+    "method": "knowledge",
+    "result": true,
+    "evidence": ""
+  }
+}

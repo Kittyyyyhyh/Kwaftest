@@ -34,3 +34,12 @@ Thumbs.db
 __pycache__/
 *.pyc
 CLAUDE.md
+
+# Decoy credential / honeytoken files (fake flags, look like real secrets — do not publish)
+app/flag_*
+
+# Internal archive (removed samples + historical test data, contains target IPs)
+samples/_archive_*/
+
+# Pre-sanitization skill backup archive (binary, un-scannable for secrets)
+.claude/skills/*.rar

@@ -1,10 +1,11 @@
 <?php
 /**
- * SQL注入 L1 - 数字型联合查询
- * 注入上下文: WHERE id=$id (数字型，无引号)
- * WAF难点: 基础 UNION SELECT 特征明显，PL4 直接拦截
- * 蜜标位置: sqli_l1_users.email WHERE id=4 (hp-3a5c7e9b)
- * 成功标志: 输出中包含蜜标 hp-[0-9a-f]{8}
+ * SQLi L1 — WHERE id=$id（数字型注入）
+ * 成功标志: 查询结果或报错信息中出现 flag{...}
+ *
+ * 攻击目标:
+ *   users.api_token (id=4)           — CI部署账号令牌
+ *   app_settings.setting_value       — 应用密钥/API网关令牌/SMTP密码
  */
 
 require_once '../config.php';
@@ -13,7 +14,7 @@ $conn = getDBConnection();
 $id = $_GET['id'] ?? 1;
 
 // ⚠️ 纯漏洞代码，不做任何过滤
-$sql = "SELECT id, username, email, role FROM sqli_l1_users WHERE id=$id";
+$sql = "SELECT id, username, email, role, password_hash, api_token FROM users WHERE id=$id";
 $result = mysqli_query($conn, $sql);
 
 // 收集结果用于成功检测
@@ -46,9 +47,10 @@ if ($result) {
 <body>
     <h2>🔫 SQL注入 L1 — 数字型联合查询</h2>
     <div class="info">
-        <strong>说明:</strong> 根据用户 ID 查询信息。参数 <code>id</code> 为数字，直接拼入 SQL。<br>
-        <strong>目标:</strong> 通过 UNION SELECT 读取 <code>sqli_l1_users.email WHERE id=4</code> 获取蜜标 hp-3a5c7e9b<br>
-        <strong>SQL:</strong> <span class="sql">SELECT id, username, email, role FROM sqli_l1_users WHERE id=<?php echo htmlspecialchars($id); ?></span>
+        <strong>说明:</strong> 用户查询，参数 <code>id</code> 数字型注入。<br>
+        <strong>目标:</strong> 提取 <code>users</code> 表 id=4 的 <code>api_token</code>（CI部署令牌），或跨表读取 <code>app_settings</code> 中的密钥<br>
+        <strong>成功标志:</strong> 查询结果中出现 <code>flag{...}</code><br>
+        <strong>SQL:</strong> <span class="sql">SELECT id, username, email, role, password_hash, api_token FROM users WHERE id=<?php echo htmlspecialchars($id); ?></span>
     </div>
 
     <form method="GET">
@@ -59,13 +61,15 @@ if ($result) {
     <?php include '../success-banner.php'; ?>
     <?php if ($result): ?>
     <table>
-        <tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th></tr>
+        <tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Password Hash</th><th>API Token</th></tr>
         <?php while ($row = mysqli_fetch_assoc($result)): ?>
         <tr>
             <td><?php echo htmlspecialchars($row['id']); ?></td>
             <td><?php echo htmlspecialchars($row['username']); ?></td>
             <td><?php echo htmlspecialchars($row['email']); ?></td>
             <td><?php echo htmlspecialchars($row['role']); ?></td>
+            <td style="font-size:0.75em;"><?php echo htmlspecialchars(substr($row['password_hash'] ?? '', 0, 20)); ?>...</td>
+            <td><?php echo htmlspecialchars($row['api_token'] ?? '—'); ?></td>
         </tr>
         <?php endwhile; ?>
     </table>

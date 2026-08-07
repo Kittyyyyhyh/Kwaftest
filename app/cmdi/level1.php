@@ -1,10 +1,13 @@
 <?php
 /**
- * 命令注入 L1 - 基础拼接
- * 注入上下文: ping -c 1 $input (直接拼接命令)
- * WAF难点: 经典分隔符注入，; | & 等会被 CRS PL4 拦截
- * 蜜标位置: /app/config/db.php (hp-4f8a2c1b)
- * 成功标志: 输出中包含蜜标 hp-[0-9a-f]{8}
+ * CMDi L1 — ping -c 1 $input（直接拼接）
+ * 成功标志: 命令输出中出现 flag{...}
+ *
+ * 攻击目标（不同危害级别）:
+ *   /srv/app/config/database.cnf    — 数据库密码（高危）
+ *   /srv/app/config/credentials.env — Stripe+Mailgun密钥（严重）
+ *   /srv/data/server_config.yml     — SSH密钥+S3凭证（严重）
+ *   /var/backups/db_dump_202607.sql — 备份用户令牌（中危）
  */
 
 $cmd = $_GET['cmd'] ?? '127.0.0.1';
@@ -34,8 +37,13 @@ $cmdOutput = $output ?? '';
 <body>
     <h2>🔫 命令注入 L1 — 基础拼接</h2>
     <div class="info">
-        <strong>说明:</strong> Ping 工具。参数 <code>cmd</code> 直接拼入 shell 命令。<br>
-        <strong>目标:</strong> 读取 <code>/app/config/db.php</code> 获取蜜标 hp-4f8a2c1b<br>
+        <strong>说明:</strong> Ping 工具，参数 <code>cmd</code> 直接拼入 shell。<br>
+        <strong>目标:</strong> 读取以下任一配置文件中的敏感凭证：<br>
+        &nbsp;&nbsp;• <code>/srv/app/config/database.cnf</code> — 数据库密码<br>
+        &nbsp;&nbsp;• <code>/srv/app/config/credentials.env</code> — Stripe/Mailgun 密钥<br>
+        &nbsp;&nbsp;• <code>/srv/data/server_config.yml</code> — SSH 密钥 / S3 凭证<br>
+        &nbsp;&nbsp;• <code>/var/backups/db_dump_202607.sql</code> — 备份中的用户令牌<br>
+        <strong>成功标志:</strong> 命令输出中出现 <code>flag{...}</code><br>
         <strong>命令:</strong> <span class="code">ping -c 1 <?php echo htmlspecialchars($cmd); ?></span>
     </div>
 

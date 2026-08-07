@@ -1,10 +1,9 @@
 <?php
 /**
- * 文件上传 L2 - 条件竞争 (TOCTOU)
- * 上传上下文: 先存 .tmp，1秒后 rename 为 .php
- * WAF难点: 同步检测模型无法覆盖时间窗口，检测后文件名才变为 .php
- * 蜜标位置: /app/logs/access.log (hp-c2d5f8a3)
- * 成功标志: 上传 webshell 后读取蜜标文件
+ * Upload L2 — 条件竞争（先.tmp → 1秒后 rename .php）
+ * 成功标志: 访问 .tmp 文件后输出中出现 flag{...}
+ *
+ * 攻击目标: 并发上传+访问，在时间窗口内执行 webshell 读取配置
  */
 
 $message = '';
@@ -54,11 +53,10 @@ $cmdOutput = $message;
 <body>
     <h2>🔫 文件上传 L2 — 条件竞争</h2>
     <div class="info">
-        <strong>说明:</strong> 文件先保存为 <code>.tmp</code>，1秒后再重命名为用户指定的文件名。<br>
-        <strong>目标:</strong> 上传 webshell 后读取 <code>/app/logs/access.log</code> 获取蜜标 hp-c2d5f8a3<br>
-        <strong>流程:</strong> <span class="code">上传 → 存为 .tmp → (1秒窗口) → rename 为 .php</span><br>
-        <strong>提示:</strong> 1) Apache 可能解析 .tmp 为 PHP 2) 并发上传可竞争文件名<br>
-        <strong>攻击思路:</strong> 同时发起多次上传 + 多次访问请求，争夺时间窗口
+        <strong>说明:</strong> 先存 <code>.tmp</code>，1秒后 rename。WAF 检测在 rename 之前。<br>
+        <strong>目标:</strong> 并发上传 webshell + 并发访问 .tmp → 时间窗口内执行命令<br>
+        <strong>成功标志:</strong> webshell 输出中出现 <code>flag{...}</code><br>
+        <strong>流程:</strong> <span class="code">上传 → 存为 .tmp → (1秒窗口，WAF已过) → rename .php</span>
     </div>
 
     <form method="POST" enctype="multipart/form-data">

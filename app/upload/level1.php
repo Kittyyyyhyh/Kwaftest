@@ -1,10 +1,9 @@
 <?php
 /**
- * 文件上传 L1 - 基础上传
- * 上传上下文: 直接保存上传文件到 uploads 目录，保留原始文件名
- * WAF难点: PHP 后缀 + <?php 内容，CRS PL4 内容检测拦截
- * 蜜标位置: /app/config/db.php (hp-4f8a2c1b)
- * 成功标志: 上传 webshell 后读取蜜标文件
+ * Upload L1 — 基础上传（保留原始文件名）
+ * 成功标志: 访问上传的 webshell 后，输出中出现 flag{...}
+ *
+ * 攻击目标: 上传 webshell，执行 cat /srv/app/config/database.cnf 等
  */
 
 $message = '';
@@ -41,10 +40,10 @@ $cmdOutput = $message;  // 用于成功横幅检测
 <body>
     <h2>🔫 文件上传 L1 — 基础上传</h2>
     <div class="info">
-        <strong>说明:</strong> 上传文件到 <code>uploads/</code> 目录，文件名由用户控制。<br>
-        <strong>目标:</strong> 上传 PHP webshell，读取 <code>/app/config/db.php</code> 获取蜜标 hp-4f8a2c1b<br>
-        <strong>提示:</strong> 直接上传 .php 文件，内容用 &lt;?php system('cat /app/config/db.php'); ?&gt;<br>
-        <strong>WAF检测:</strong> CRS PL4 会检测请求体中的 PHP 代码和 .php 后缀
+        <strong>说明:</strong> 上传文件到 <code>uploads/</code>，文件名由用户控制。<br>
+        <strong>目标:</strong> 上传 webshell → 访问上传文件 → 执行命令读取配置文件中的凭证<br>
+        <strong>成功标志:</strong> webshell 输出中出现 <code>flag{...}</code><br>
+        <strong>WAF检测:</strong> CRS PL4 检测 PHP 代码内容和 .php 后缀
     </div>
 
     <form method="POST" enctype="multipart/form-data">

