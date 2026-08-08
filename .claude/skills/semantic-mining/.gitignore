@@ -3,3 +3,10 @@ __pycache__/
 *.tmp
 corpus/tests.jsonl
 .campaign/
+# 样本成果（远程实测载荷库 / 学习状态 / 目标信息 / 轮次数据）—— 不入库
+# 每个研究者自行积累, 保持仓库为方法论 + 工具链 + 知识库
+corpus/samples.jsonl
+skill_state.json
+targets/profile.json
+rounds/
+knowledge/seeds.jsonl
