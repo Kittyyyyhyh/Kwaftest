@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}WAF 样本库{% endblock %} · 腾讯Mini</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">🛡️</div>
+      <div>
+        <h1>WAF 样本库</h1>
+        <small>语义绕过测试平台</small>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="{{ url_for('dashboard') }}" class="{{ 'active' if active=='dashboard' }}">
+        <span class="ico">📊</span>总览
+      </a>
+      <a href="{{ url_for('samples') }}" class="{{ 'active' if active=='samples' }}">
+        <span class="ico">🗂️</span>样本库
+      </a>
+      <a href="{{ url_for('knowledge') }}" class="{{ 'active' if active=='knowledge' }}">
+        <span class="ico">📚</span>知识库
+      </a>
+      <a href="{{ url_for('state') }}" class="{{ 'active' if active=='state' }}">
+        <span class="ico">🧠</span>Skill 状态
+      </a>
+    </nav>
+    <div class="foot">
+      205 条已确认样本<br>全部远程实测通过
+    </div>
+  </aside>
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

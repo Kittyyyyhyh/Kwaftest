@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}总览{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>📊 样本成果总览</h2>
+  <p>语义绕过测试 · 已确认样本集（远程实测全部通过）</p>
+</div>
+
+{% if state.waf_update_warning %}
+<div class="banner warn">⚠️ {{ state.waf_update_warning }}</div>
+{% endif %}
+
+<div class="kpis">
+  <div class="kpi">
+    <div class="label">📦 样本总数</div>
+    <div class="value accent">{{ stats.total_samples }}</div>
+    <div class="sub">{{ stats.unique_payloads }} 个唯一 payload</div>
+  </div>
+  <div class="kpi">
+    <div class="label">🎯 已确认技法</div>
+    <div class="value green">{{ stats.confirmed_techniques }}</div>
+    <div class="sub">AND→&& / =→LIKE / FROM</div>
+  </div>
+  <div class="kpi">
+    <div class="label">✅ 样本集通过率</div>
+    <div class="value green">{{ stats.confirmed_rate_pct }}%</div>
+    <div class="sub">{{ stats.passed }} / {{ stats.tested }} 实测通过</div>
+  </div>
+  <div class="kpi">
+    <div class="label">🗂️ 场景覆盖</div>
+    <div class="value">{{ stats.by_scenario|length }}</div>
+    <div class="sub">sqli · cmdi · log4j2</div>
+  </div>
+  <div class="kpi">
+    <div class="label">🆔 WAF UUID</div>
+    <div class="value amber">{{ stats.distinct_waf_uuids }}</div>
+    <div class="sub">远程拦截特征去重</div>
+  </div>
+</div>
+
+<div class="grid main-col">
+  <!-- 左列 -->
+  <div>
+    <div class="card mb-16">
+      <h3>场景分布 <span class="hint">样本数 / 已确认通过</span></h3>
+      {% set maxc = (scenario_rows | map(attribute='count') | list | max) or 1 %}
+      {% for v in scenario_rows %}
+      {% set pct = (v.count / maxc * 100) | round(1) %}
+      <div class="bar-row">
+        <div class="bar-label"><span class="badge scenario-{{ v.name }}">{{ v.name }}</span></div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: {{ pct }}%; background: linear-gradient(90deg, {{ sc_colors.get(v.name, '#38bdf8') }}, {{ sc_colors.get(v.name, '#38bdf8') }}cc)"></div>
+        </div>
+        <div class="bar-num">{{ v.count }} <span class="faint">/{{ v.passed }}</span></div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="card">
+      <h3>原语覆盖排行 <span class="hint">按样本数 top 12</span></h3>
+      {% set maxp = (stats.top_dimensions | map(attribute='count') | list | max) or 1 %}
+      {% for d in stats.top_dimensions[:12] %}
+      {% set pct = (d.count / maxp * 100) | round(1) %}
+      <div class="bar-row">
+        <div class="bar-label mono" title="{{ d.primitive }}">{{ d.primitive }}</div>
+        <div class="bar-track"><div class="bar-fill purple" style="width: {{ pct }}%"></div></div>
+        <div class="bar-num">{{ d.count }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 右列 -->
+  <div>
+    <div class="card mb-16">
+      <h3>学习状态 <span class="hint">按场景</span></h3>
+      {% for sc, s in state.scenarios.items() %}
+      <div class="kv mb-16">
+        <div class="flex wrap">
+          <span class="badge scenario-{{ sc }}">{{ sc }}</span>
+          <span class="faint" style="font-size:12px">第 {{ s.round }} 轮</span>
+          <span class="right faint" style="font-size:11px">{{ s.last_run[:10] }}</span>
+        </div>
+        <div class="flex wrap gap-10 mt-8">
+          <span class="badge tier-confirmed">✓ {{ s.tiers.confirmed }} confirmed</span>
+          <span class="badge tier-boundary">◎ {{ s.tiers.boundary }} boundary</span>
+          <span class="badge tier-exploring">◇ {{ s.tiers.exploring }} exploring</span>
+          {% if s.tiers.dead %}<span class="badge tier-dead">✗ {{ s.tiers.dead }} dead</span>{% endif %}
+        </div>
+        {% if s.pending_directions %}
+        <div class="mt-8">
+          {% for d in s.pending_directions[:2] %}
+          <div class="faint" style="font-size:12px">→ {{ d.desc }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if state.knowledge_gaps %}
+    <div class="card mb-16">
+      <h3>知识缺口</h3>
+      <ul class="clean">
+        {% for g in state.knowledge_gaps %}
+        <li>
+          <span class="badge tier-danger">{{ g.scenario }}</span>
+          <span class="muted">{{ g.signal }}</span>
+          <div class="faint" style="font-size:12px">{{ g.suggestion }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if state.corpus_curation %}
+<div class="banner curate mt-24">📌 <span><b>样本库整理说明</b> — {{ state.corpus_curation.note }}</span></div>
+{% endif %}
+
+<div class="card mt-24">
+  <h3>通过 WAF 的有效样本 <span class="hint">前 10 条</span></h3>
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>场景</th><th>payload</th><th>原语</th><th>质量</th></tr></thead>
+      <tbody>
+        {% for s in stats.effective_samples[:10] %}
+        <tr class="rowlink" onclick="location.href='/samples/{{ s.sample_id }}'">
+          <td><span class="badge scenario-{{ s.scenario }}">{{ s.scenario }}</span></td>
+          <td class="mono">{{ s.payload[:70] }}</td>
+          <td class="mono faint">{{ s.primitives[-1] }}</td>
+          <td><span class="badge tier-info">{{ s.overall }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

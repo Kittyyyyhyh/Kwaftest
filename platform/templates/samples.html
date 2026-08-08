@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}样本库{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🗂️ 样本库 <span class="badge status-passed">{{ total }} 条已确认</span></h2>
+  <p>全部样本均通过远程 WAF 实测 · 点击行查看详情</p>
+</div>
+
+<form method="get" action="/samples" class="filter-bar">
+  <input type="text" name="q" placeholder="🔍 搜索 payload…" value="{{ q or '' }}">
+  <select name="scenario">
+    <option value="">场景</option>
+    {% for s in options.scenarios %}<option value="{{ s }}" {{ 'selected' if scenario==s }}>{{ s }}</option>{% endfor %}
+  </select>
+  <select name="category">
+    <option value="">类别</option>
+    {% for c in options.categories %}<option value="{{ c }}" {{ 'selected' if category==c }}>{{ c }}</option>{% endfor %}
+  </select>
+  <select name="status">
+    <option value="">状态</option>
+    {% for s in options.statuses %}<option value="{{ s }}" {{ 'selected' if status==s }}>{{ s }}</option>{% endfor %}
+  </select>
+  <select name="primitive">
+    <option value="">主原语</option>
+    {% for p in options.primitives %}<option value="{{ p }}" {{ 'selected' if primitive==p }}>{{ p }}</option>{% endfor %}
+  </select>
+  <select name="sort">
+    {% for k, v in options.sorts %}<option value="{{ k }}" {{ 'selected' if sort==k }}>{{ v }}</option>{% endfor %}
+  </select>
+  <button type="submit" class="btn primary">过滤</button>
+  <a class="btn right" href="/samples?{{ q_url({}, 1) }}">重置</a>
+</form>
+
+<div class="table-wrap">
+  <table class="tbl">
+    <thead>
+      <tr><th>ID</th><th>场景</th><th>payload</th><th>主原语</th><th>状态</th><th>质量</th><th class="num">长度</th></tr>
+    </thead>
+    <tbody>
+      {% for s in samples %}
+      <tr class="rowlink" onclick="location.href='/samples/{{ s.sample_id }}'">
+        <td class="mono faint">{{ s.sample_id[:8] }}</td>
+        <td><span class="badge scenario-{{ s.scenario }}">{{ s.scenario }}</span></td>
+        <td class="mono">{{ s.payload.raw[:72] }}{% if s.payload.raw|length > 72 %}…{% endif %}</td>
+        <td class="mono faint">{{ s.primary_prim }}</td>
+        <td><span class="badge status-{{ s.status }}">{{ s.status }}</span></td>
+        <td><span class="badge tier-{{ 'info' if s.quality.overall=='high' else 'exploring' }}">{{ s.quality.overall }}</span></td>
+        <td class="num faint">{{ s.payload.length }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty">没有匹配的样本</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="flex wrap pagination">
+  {% if page > 1 %}<a href="/samples?{{ q_url(filters, page-1) }}">‹ 上一页</a>{% else %}<span class="page dis">‹ 上一页</span>{% endif %}
+  {% set lo = [1, page-2] | max %}
+  {% set hi = [total_pages, page+2] | min %}
+  {% if lo > 1 %}<a href="/samples?{{ q_url(filters, 1) }}">1</a>{% if lo > 2 %}<span class="faint">…</span>{% endif %}{% endif %}
+  {% for p in range(lo, hi+1) %}
+    {% if p == page %}<span class="page cur">{{ p }}</span>
+    {% else %}<a href="/samples?{{ q_url(filters, p) }}">{{ p }}</a>{% endif %}
+  {% endfor %}
+  {% if hi < total_pages %}{% if hi < total_pages-1 %}<span class="faint">…</span>{% endif %}<a href="/samples?{{ q_url(filters, total_pages) }}">{{ total_pages }}</a>{% endif %}
+  {% if page < total_pages %}<a href="/samples?{{ q_url(filters, page+1) }}">下一页 ›</a>{% else %}<span class="page dis">下一页 ›</span>{% endif %}
+  <span class="faint right">共 {{ total }} 条 · {{ page }} / {{ total_pages }}</span>
+</div>
+
+<div class="flex mt-16">
+  <span class="faint" style="margin-right:10px">导出：</span>
+  <a class="btn sm" href="/export?{{ q_url(filters, 1, format='csv') }}">⬇ CSV</a>
+  <a class="btn sm" href="/export?{{ q_url(filters, 1, format='md') }}">⬇ Markdown</a>
+  <a class="btn sm" href="/export?{{ q_url(filters, 1, format='jsonl') }}">⬇ JSONL</a>
+</div>
+{% endblock %}

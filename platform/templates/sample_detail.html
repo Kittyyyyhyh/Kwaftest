@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}样本详情{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="detail-head">
+    <a class="btn sm ghost" href="/samples">← 样本库</a>
+    <span class="title">{{ s.sample_id }}</span>
+    <span class="badge scenario-{{ s.scenario }}">{{ s.scenario }}</span>
+    <span class="badge status-{{ s.status }}">{{ s.status }}</span>
+    {% for t in s.tags %}<span class="tag">{{ t }}</span>{% endfor %}
+    <button class="btn sm primary copy-btn" data-copy="{{ s.payload.raw }}">📋 复制 payload</button>
+  </div>
+  <p class="muted">{{ s.category }} · {{ s.generation.source }} 生成</p>
+</div>
+
+<div class="card mb-16">
+  <h3>攻击载荷</h3>
+  <pre class="payload">{{ s.payload.raw }}</pre>
+  <div class="faint mt-8">长度 {{ s.payload.length }} 字符</div>
+</div>
+
+<div class="kv-grid">
+  <div class="kv">
+    <div class="k">绕过机制</div>
+    <div class="v mono">
+      {% for p in s.mechanism.primitives %}
+        <div class="mt-8"><b style="color:var(--accent-2)">{{ p.id }}</b>
+        {% if p.kb_ref %}<span class="faint"> · {{ p.kb_ref }}</span>{% endif %}</div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="kv">
+    <div class="k">层</div>
+    <div class="v mono">
+      {% for l in s.mechanism.layers %}<span class="tag">{{ l }}</span>{% else %}<span class="faint">—</span>{% endfor %}
+    </div>
+    <div class="k mt-16">生成来源</div>
+    <div class="v">{{ s.generation.source }}</div>
+  </div>
+  <div class="kv">
+    <div class="k">生成理由</div>
+    <div class="v muted" style="font-size:12px">{{ s.generation.reason or '—' }}</div>
+  </div>
+</div>
+
+<div class="kv-grid mt-16">
+  <div class="kv">
+    <div class="k">质量评估</div>
+    <div class="flex wrap gap-10">
+      <span class="tag">有效 {{ s.quality.effectiveness }}</span>
+      <span class="tag">危害 {{ s.quality.harmfulness }}</span>
+      <span class="tag">洞察 {{ s.quality.insight }}</span>
+      <span class="tag">可用 {{ s.quality.usability }}</span>
+      <span class="badge tier-{{ 'info' if s.quality.overall=='high' else 'exploring' }}">{{ s.quality.overall }}</span>
+    </div>
+    {% if s.quality.notes %}<div class="faint mt-8" style="font-size:12px">{{ s.quality.notes }}</div>{% endif %}
+  </div>
+  <div class="kv">
+    <div class="k">语义确认</div>
+    <div class="flex gap-10">
+      <span class="badge {{ 'tier-confirmed' if s.semantic_confirmation.result else 'tier-dead' }}">
+        {{ '语义成立' if s.semantic_confirmation.result else '未确认' }}
+      </span>
+      <span class="faint">{{ s.semantic_confirmation.method }}</span>
+    </div>
+    {% if s.semantic_confirmation.evidence %}<div class="faint mt-8" style="font-size:12px">证据: {{ s.semantic_confirmation.evidence }}</div>{% endif %}
+  </div>
+</div>
+
+<div class="card mt-24">
+  <h3>远程实测证据 <span class="hint">{{ tests|length }} 条测试记录</span></h3>
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>时间</th><th>run_id</th><th>状态码</th><th>判定</th><th>耗时</th><th>WAF UUID</th></tr></thead>
+      <tbody>
+        {% for t in tests %}
+        <tr>
+          <td class="faint num">{{ t.timestamp[:19] }}</td>
+          <td class="mono faint">{{ t.run_id }}</td>
+          <td class="num"><span class="badge {{ 'status-passed' if t.result.http_status==200 else 'status-blocked' }}">{{ t.result.http_status }}</span></td>
+          <td><span class="badge status-{{ t.result.waf_decision }}">{{ t.result.waf_decision }}</span></td>
+          <td class="num faint">{{ t.result.latency_ms }} ms</td>
+          <td class="mono faint">{{ t.result.block_signals.x_waf_uuid[:16] if t.result.block_signals and t.result.block_signals.x_waf_uuid else '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="empty">暂无测试记录</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -43,3 +43,15 @@ samples/_archive_*/
 
 # Pre-sanitization skill backup archive (binary, un-scannable for secrets)
 .claude/skills/*.rar
+
+# Local Log4j verification harness build artifacts (jars/class)
+.verify_log4j/
+
+# Round input probes (transient Layer-1 seeds)
+.claude/skills/semantic-mining/probes_*.jsonl
+
+# Temp CSV exports
+platform/tmp_export.csv
+
+# Platform archive (removed samples + historical test data, contains target IPs)
+.claude/samples/_archive_*/

@@ -8,8 +8,8 @@
   },
   "target": {
     "name": "tencent_waf_prod",
-    "ip": "<WAF_TARGET_IP>",
-    "host": "<WAF_TARGET_HOST>",
+    "ip": "43.136.161.54",
+    "host": "miniproject.testwaf.com",
     "scheme": "http",
     "default_placement": "query",
     "params": {"sqli": "id", "cmdi": "cmd", "xss": "q", "upload": "file", "log4j2": "name"},

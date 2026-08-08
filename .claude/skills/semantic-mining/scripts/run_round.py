@@ -52,6 +52,14 @@ def main():
     ap.add_argument("--name", default=None, help="run_id")
     ap.add_argument("--derive", action="store_true", default=True,
                     help="是否对种子做 Layer2 模板派生（默认开）")
+    ap.add_argument("--max-derived", type=int, default=400,
+                    help="Layer2 派生总量上限（默认 400，含 AI 种子）")
+    ap.add_argument("--compose", type=int, default=0,
+                    help="语句合成器生成 N 条新语句（结构性生成，解耦新颖性与手写种子）")
+    ap.add_argument("--seeds", action="store_true", default=False,
+                    help="从 knowledge/seeds.jsonl 加载该场景种子参与派生（进化种子库，治本机制）")
+    ap.add_argument("--curate", action="store_true", default=False,
+                    help="本轮后把新颖通过样本自动提升进 knowledge/seeds.jsonl（学习机制）")
     ap.add_argument("--iterate-synonyms", type=int, default=0,
                     help="取 corpus 中该场景前 N 个已成功样本做同义近义迭代（skill 变强）")
     args = ap.parse_args()
@@ -86,9 +94,39 @@ def main():
         existing[rec["sample_id"]] = rec
         new_samples.append(rec)
 
+    # 2.5 语句合成器：结构性生成新语句（广度辅助）
+    if args.compose > 0:
+        from lib import composer
+        composed_n = 0
+        for cp in composer.compose_probes(args.scenario, args.compose):
+            rec = schema.build_sample_from_probe(cp)
+            if rec["sample_id"] in existing:
+                continue
+            existing[rec["sample_id"]] = rec
+            new_samples.append(rec)
+            composed_n += 1
+        print("composer: 生成新语句 %d 条" % composed_n)
+
+    # 2.6 进化种子库：加载该场景种子作为派生源（治本机制核心）
+    # 种子本身已在 corpus（curate 自通过样本），这里作派生源加入，
+    # 主 derive() 会对它们去重并派生出全新的变体，实现"种子库学习进化"。
+    if args.seeds:
+        seeds_path = Path(__file__).resolve().parent.parent / "knowledge" / "seeds.jsonl"
+        if seeds_path.exists():
+            seed_n = 0
+            for line in open(seeds_path, encoding="utf-8"):
+                seed = json.loads(line)
+                if seed.get("scenario") != args.scenario:
+                    continue
+                new_samples.append(seed)
+                seed_n += 1
+            print("seeds: 加载种子源 %d 条（将派生新变体）" % seed_n)
+        else:
+            print("seeds: knowledge/seeds.jsonl 不存在，跳过")
+
     # 3. Layer2 派生
     if args.derive:
-        variants = generator.derive(new_samples, max_depth=2)
+        variants = generator.derive(new_samples, max_depth=3, max_variants=args.max_derived)
         for v in variants:
             if v["sample_id"] not in existing:
                 existing[v["sample_id"]] = v
@@ -108,11 +146,32 @@ def main():
                 new_samples.append(rec)
                 syn_count += 1
 
+    # 3.6 cmdi shell 有效性门禁
+    # 远程源站不执行命令，WAF 放行(200) ≠ 攻击有效。cmdi 先本地验语法，
+    # 无效 payload（如未闭合引号 / true && ;）剔除，不浪费远程请求、不污染有效样本。
+    shell_dropped = 0
+    if args.scenario == "cmdi" and new_samples:
+        import subprocess as _sp
+        kept = []
+        for rec in new_samples:
+            payload = rec["payload"]["raw"]
+            try:
+                r = _sp.run(["bash", "-n", "-c", "echo x " + payload],
+                            capture_output=True, text=True, timeout=5)
+                ok = (r.returncode == 0)
+            except Exception:  # bash 不可用时放行，不阻塞
+                ok = True
+            if ok:
+                kept.append(rec)
+            else:
+                shell_dropped += 1
+        if shell_dropped:
+            print("cmdi shell 门禁: 剔除语法无效 %d / %d" % (shell_dropped, len(new_samples)))
+        new_samples = kept
+
+    ai_n = sum(1 for s in new_samples if s["generation"]["source"] == "ai")
     print("new samples: %d (AI %d + derived %d + synonym_iter %d)" % (
-        len(new_samples), sum(1 for s in new_samples if s["generation"]["source"] == "ai"),
-        sum(1 for s in new_samples if "template" in (s["generation"].get("template_ids") or []) and
-            "synonym_mutation" not in (s["generation"].get("template_ids") or [])),
-        syn_count))
+        len(new_samples), ai_n, len(new_samples) - ai_n - syn_count, syn_count))
 
     if args.dry_run or not new_samples:
         return
@@ -144,6 +203,12 @@ def main():
     state["knowledge_gaps"] = list(merged.values())
     analysis.save_state(state)
     analysis.sync_statuses(SAMPLES_PATH, TESTS_PATH)
+
+    # 6.5 种子策展：把新颖通过样本提升进种子库（学习机制，治本）
+    if args.curate:
+        import subprocess as _sp
+        _sp.run([sys.executable, str(Path(__file__).resolve().parent / "curate_seeds.py"),
+                 "--per-class", "2"])
 
     # 6. 摘要
     print(json.dumps({

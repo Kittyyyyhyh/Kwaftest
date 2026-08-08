@@ -7,6 +7,7 @@
 from collections import Counter, defaultdict
 
 from . import storage
+from . import util as putil
 
 
 def build_stats(cfg) -> dict:
@@ -117,3 +118,44 @@ def render_markdown(stats) -> str:
             s["sample_id"][:10], s["scenario"], s["category"],
             s["payload"][:70].replace("|", "\\|"), ";".join(s["primitives"])[:40]))
     return "\n".join(L)
+
+
+def build_state_summary(cfg) -> dict:
+    """从 skill_state.json 聚合学习状态（per-scenario 档位/技法/方向 + WAF + 知识缺口）。
+
+    供展示平台使用；build_stats 保持兼容不变。
+    """
+    sd = storage.ensure_skill_import(cfg)
+    state = putil.load_json(str(sd / "skill_state.json"), {}) or {}
+
+    scenarios = {}
+    for sc, data in (state.get("scenarios") or {}).items():
+        ds = data.get("dimension_stats") or {}
+        tiers = {"confirmed": 0, "dead": 0, "boundary": 0, "exploring": 0}
+        for v in ds.values():
+            t = v.get("tier", "exploring") or "exploring"
+            tiers[t] = tiers.get(t, 0) + 1
+        scenarios[sc] = {
+            "round": data.get("round", 0),
+            "last_run": data.get("last_run", "") or "",
+            "tiers": tiers,
+            "confirmed_techniques": data.get("confirmed_techniques", []),
+            "dead_primitives": data.get("dead_primitives", []),
+            "pending_directions": data.get("pending_directions", []),
+            "history": data.get("history", []),
+        }
+
+    tgt = (state.get("targets") or {}).get("tencent_waf_prod", {})
+    uuids = tgt.get("seen_waf_uuids", [])
+    waf = {
+        "uuid_count": len(set(uuids)),
+        "last_run": tgt.get("last_run", "") or "",
+        "update_warning": tgt.get("waf_update_warning"),
+    }
+
+    return {
+        "scenarios": scenarios,
+        "waf": waf,
+        "knowledge_gaps": state.get("knowledge_gaps", []),
+        "corpus_curation": state.get("corpus_curation"),
+    }

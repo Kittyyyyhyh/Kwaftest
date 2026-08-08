@@ -1,679 +1,1173 @@
 {
-  "schema_version": 2,
-  "scenarios": {
-    "sqli": {
-      "round": 3,
-      "last_run": "2026-08-03T09:56:59.333Z",
-      "dimension_stats": {
-        "sqli:syntactic:values_row": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "sqli:syntactic:cte_with": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "sqli:semantic:geo_error": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "sqli:syntactic:join_derived": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "sqli:syntactic:bool_ops": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "gen:comment_split": {
-          "tested": 34,
-          "passed": 3,
-          "pass_rate": 0.088,
-          "tier": "exploring"
-        },
-        "gen:version_comment": {
-          "tested": 32,
-          "passed": 7,
-          "pass_rate": 0.219,
-          "tier": "boundary"
-        },
-        "gen:whitespace_sub": {
-          "tested": 33,
-          "passed": 18,
-          "pass_rate": 0.545,
-          "tier": "boundary"
-        },
-        "gen:case_flip": {
-          "tested": 40,
-          "passed": 14,
-          "pass_rate": 0.35,
-          "tier": "boundary"
-        },
-        "gen:double_write": {
-          "tested": 38,
-          "passed": 20,
-          "pass_rate": 0.526,
-          "tier": "boundary"
-        },
-        "gen:quote_split": {
-          "tested": 41,
-          "passed": 19,
-          "pass_rate": 0.463,
-          "tier": "boundary"
-        },
-        "gen:operator_swap": {
-          "tested": 15,
-          "passed": 4,
-          "pass_rate": 0.267,
-          "tier": "boundary"
-        },
-        "gen:synonym:UNION": {
-          "tested": 6,
-          "passed": 4,
-          "pass_rate": 0.667,
-          "tier": "boundary"
-        },
-        "gen:synonym:SELECT": {
-          "tested": 22,
-          "passed": 9,
-          "pass_rate": 0.409,
-          "tier": "boundary"
-        },
-        "gen:synonym:AND": {
-          "tested": 8,
-          "passed": 8,
-          "pass_rate": 1.0,
-          "tier": "confirmed"
-        },
-        "gen:synonym:FROM": {
-          "tested": 8,
-          "passed": 7,
-          "pass_rate": 0.875,
-          "tier": "confirmed"
-        },
-        "gen:synonym:=": {
-          "tested": 8,
-          "passed": 8,
-          "pass_rate": 1.0,
-          "tier": "confirmed"
-        },
-        "gen:synonym:flags": {
-          "tested": 6,
-          "passed": 3,
-          "pass_rate": 0.5,
-          "tier": "boundary"
-        }
-      },
-      "confirmed_techniques": [
-        "gen:synonym:AND",
-        "gen:synonym:FROM",
-        "gen:synonym:="
-      ],
-      "dead_primitives": [
-        "gen:comment_split",
-        "gen:whitespace_sub",
-        "gen:operator_swap"
-      ],
-      "pending_directions": [
-        {
-          "desc": "深挖 gen:synonym:flags（通过率 50%，已测 6）",
-          "basis": "boundary:gen:synonym:flags",
-          "priority": 0.25
-        },
-        {
-          "desc": "深挖 gen:double_write（通过率 53%，已测 38）",
-          "basis": "boundary:gen:double_write",
-          "priority": 0.249
-        },
-        {
-          "desc": "深挖 gen:quote_split（通过率 46%，已测 41）",
-          "basis": "boundary:gen:quote_split",
-          "priority": 0.249
-        }
-      ],
-      "history": [
-        {
-          "round": 1,
-          "tested": 99,
-          "note": "round 1"
-        },
-        {
-          "round": 2,
-          "tested": 265,
-          "note": "round 2"
-        },
-        {
-          "round": 3,
-          "tested": 296,
-          "note": "round 3"
-        }
-      ]
+ "schema_version": 2,
+ "scenarios": {
+  "sqli": {
+   "round": 12,
+   "last_run": "2026-08-08T08:32:58.543Z",
+   "dimension_stats": {
+    "sqli:semantic:regexp_predicate": {
+     "tested": 3,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
     },
-    "xss": {
-      "round": 2,
-      "last_run": "2026-08-03T09:28:28.959Z",
-      "dimension_stats": {
-        "xss:context:svg_xlink": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "xss:context:math_mtext": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "xss:context:event_more": {
-          "tested": 4,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "xss:obfuscation:from_charcode": {
-          "tested": 2,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "xss:obfuscation:js_func_obfuscation": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "gen:tag_case": {
-          "tested": 21,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "dead"
-        },
-        "gen:comment_split": {
-          "tested": 6,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "gen:case_flip": {
-          "tested": 6,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "gen:handler_split": {
-          "tested": 6,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        }
-      },
-      "confirmed_techniques": [],
-      "dead_primitives": [
-        "gen:comment_split",
-        "gen:case_flip",
-        "gen:handler_split",
-        "gen:tag_case"
-      ],
-      "pending_directions": [],
-      "history": [
-        {
-          "round": 1,
-          "tested": 63,
-          "note": "round 1"
-        },
-        {
-          "round": 2,
-          "tested": 48,
-          "note": "round 2"
-        }
-      ]
+    "sqli:syntactic:greatest_bound": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
     },
-    "cmdi": {
-      "round": 1,
-      "last_run": "2026-08-03T09:02:22.605Z",
-      "dimension_stats": {
-        "cmdi:lexical:quote_split": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "cmdi:lexical:backslash": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "cmdi:lexical:ifs": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "cmdi:lexical:ansi_c_quoting": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "cmdi:syntactic:brace_expansion": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "cmdi:syntactic:glob": {
-          "tested": 2,
-          "passed": 1,
-          "pass_rate": 0.5,
-          "tier": "boundary"
-        },
-        "cmdi:syntactic:logical_chain": {
-          "tested": 3,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "cmdi:semantic:env_concat": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "gen:ifs_sub": {
-          "tested": 29,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "dead"
-        },
-        "gen:logical_chain": {
-          "tested": 33,
-          "passed": 6,
-          "pass_rate": 0.182,
-          "tier": "exploring"
-        },
-        "gen:quote_split": {
-          "tested": 13,
-          "passed": 3,
-          "pass_rate": 0.231,
-          "tier": "boundary"
-        },
-        "gen:backslash_split": {
-          "tested": 13,
-          "passed": 3,
-          "pass_rate": 0.231,
-          "tier": "boundary"
-        }
-      },
-      "confirmed_techniques": [],
-      "dead_primitives": [
-        "gen:ifs_sub"
-      ],
-      "pending_directions": [
-        {
-          "desc": "深挖 cmdi:syntactic:glob（通过率 50%，已测 2）",
-          "basis": "boundary:cmdi:syntactic:glob",
-          "priority": 0.25
-        },
-        {
-          "desc": "深挖 gen:quote_split（通过率 23%，已测 13）",
-          "basis": "boundary:gen:quote_split",
-          "priority": 0.178
-        },
-        {
-          "desc": "深挖 gen:backslash_split（通过率 23%，已测 13）",
-          "basis": "boundary:gen:backslash_split",
-          "priority": 0.178
-        }
-      ],
-      "history": [
-        {
-          "round": 1,
-          "tested": 99,
-          "note": "round 1"
-        }
-      ]
+    "sqli:syntactic:bitwise_cmp": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
     },
-    "log4j2": {
-      "round": 3,
-      "last_run": "2026-08-03T09:28:46.226Z",
-      "dimension_stats": {
-        "log4j2:lookup:dotless_i": {
-          "tested": 2,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "log4j2:lookup:sys_default": {
-          "tested": 2,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "log4j2:lookup:exotic_protocol": {
-          "tested": 2,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "log4j2:lookup:info_disclosure": {
-          "tested": 2,
-          "passed": 1,
-          "pass_rate": 0.5,
-          "tier": "boundary"
-        },
-        "log4j2:lookup:deep_nesting": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "log4j2:delivery:header_injection": {
-          "tested": 2,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        },
-        "log4j2:lookup:empty_default": {
-          "tested": 1,
-          "passed": 0,
-          "pass_rate": 0.0,
-          "tier": "exploring"
-        }
-      },
-      "confirmed_techniques": [],
-      "dead_primitives": [],
-      "pending_directions": [
-        {
-          "desc": "深挖 log4j2:lookup:info_disclosure（通过率 50%，已测 2）",
-          "basis": "boundary:log4j2:lookup:info_disclosure",
-          "priority": 0.25
-        }
-      ],
-      "history": [
-        {
-          "round": 1,
-          "tested": 8,
-          "note": "round 1"
-        },
-        {
-          "round": 2,
-          "tested": 8,
-          "note": "round 2"
-        },
-        {
-          "round": 3,
-          "tested": 12,
-          "note": "round 3"
-        }
-      ]
+    "gen:comment_split": {
+     "tested": 27,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "dead"
+    },
+    "gen:double_write": {
+     "tested": 30,
+     "passed": 2,
+     "pass_rate": 0.067,
+     "tier": "exploring"
+    },
+    "sqli:syntactic:string_hex_literal": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "sqli:semantic:gtid_subset": {
+     "tested": 2,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "sqli:syntactic:query_restructure": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "sqli:syntactic:case_when_if": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "gen:version_comment": {
+     "tested": 23,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "dead"
+    },
+    "sqli:semantic:time_blind": {
+     "tested": 2,
+     "passed": 2,
+     "pass_rate": 1.0,
+     "tier": "exploring"
+    },
+    "gen:whitespace_sub": {
+     "tested": 14,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "dead"
+    },
+    "gen:case_flip": {
+     "tested": 23,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "dead"
+    },
+    "gen:operator_swap": {
+     "tested": 36,
+     "passed": 4,
+     "pass_rate": 0.111,
+     "tier": "exploring"
+    },
+    "gen:quote_split": {
+     "tested": 26,
+     "passed": 2,
+     "pass_rate": 0.077,
+     "tier": "exploring"
+    },
+    "gen:comment_split_all": {
+     "tested": 31,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "dead"
+    },
+    "gen:version_comment_all": {
+     "tested": 32,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "dead"
+    },
+    "gen:double_write_all": {
+     "tested": 36,
+     "passed": 20,
+     "pass_rate": 0.556,
+     "tier": "boundary"
+    },
+    "gen:quote_split_all": {
+     "tested": 31,
+     "passed": 20,
+     "pass_rate": 0.645,
+     "tier": "confirmed"
+    },
+    "gen:blank_matrix": {
+     "tested": 34,
+     "passed": 4,
+     "pass_rate": 0.118,
+     "tier": "exploring"
+    },
+    "gen:compose_version_quote": {
+     "tested": 30,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "dead"
+    },
+    "gen:compose_double_quote": {
+     "tested": 30,
+     "passed": 2,
+     "pass_rate": 0.067,
+     "tier": "exploring"
     }
+   },
+   "confirmed_techniques": [
+    "gen:synonym:AND",
+    "gen:synonym:FROM",
+    "gen:synonym:=",
+    "gen:double_write_all",
+    "gen:quote_split_all",
+    "gen:compose_version_quote",
+    "gen:compose_double_quote",
+    "gen:comment_split_all",
+    "gen:comment_split",
+    "gen:case_flip",
+    "gen:double_write",
+    "gen:quote_split",
+    "gen:blank_matrix",
+    "gen:version_comment",
+    "gen:whitespace_sub",
+    "gen:version_comment_all"
+   ],
+   "dead_primitives": [
+    "gen:comment_split",
+    "gen:whitespace_sub",
+    "gen:operator_swap",
+    "gen:case_flip",
+    "gen:version_comment_all",
+    "gen:comment_split_all",
+    "gen:version_comment",
+    "gen:compose_version_quote"
+   ],
+   "pending_directions": [
+    {
+     "desc": "深挖 gen:double_write_all（通过率 56%，已测 36）",
+     "basis": "boundary:gen:double_write_all",
+     "priority": 0.247
+    },
+    {
+     "desc": "深挖 gen:quote_split_all（通过率 64%，已测 31）",
+     "basis": "confirmed:gen:quote_split_all",
+     "priority": 0.229
+    },
+    {
+     "desc": "深挖 sqli:semantic:regexp_predicate×CASE WHEN（CASE WHEN REGEXP 布尔盲注，本轮 54 变体全过，函数布尔盲注结构原零通过）",
+     "basis": "confirmed:sqli:semantic:regexp_predicate",
+     "priority": 0.9
+    }
+   ],
+   "history": [
+    {
+     "round": 1,
+     "tested": 99,
+     "note": "round 1"
+    },
+    {
+     "round": 2,
+     "tested": 265,
+     "note": "round 2"
+    },
+    {
+     "round": 3,
+     "tested": 296,
+     "note": "round 3"
+    },
+    {
+     "round": 4,
+     "tested": 413,
+     "note": "round 4"
+    },
+    {
+     "round": 5,
+     "tested": 312,
+     "note": "round 5"
+    },
+    {
+     "round": 6,
+     "tested": 424,
+     "note": "round 6"
+    },
+    {
+     "round": 7,
+     "tested": 312,
+     "note": "round 7"
+    },
+    {
+     "round": 8,
+     "tested": 335,
+     "note": "round 8"
+    },
+    {
+     "round": 9,
+     "tested": 433,
+     "note": "round 9"
+    },
+    {
+     "round": 10,
+     "tested": 335,
+     "note": "round 10"
+    },
+    {
+     "round": 11,
+     "tested": 542,
+     "note": "round 11"
+    },
+    {
+     "round": 12,
+     "tested": 415,
+     "note": "round 12"
+    }
+   ]
   },
-  "targets": {
-    "tencent_waf_prod": {
-      "seen_waf_uuids": [
-        "c6bdfc87cf61643b43702f151913ef11-546052730fdf6f9178b5b0baebb6a28f",
-        "c7171718cde94f68a7572a393017e806-4c3dc78b447fbddf7e979e24eefdf827",
-        "c72e7168c8ff08fd5e85c715cd3f4ef1-ab7e8eb44142071a7edc7073a95f96e4",
-        "c75ed8f75342274f849ba699257c9559-96dbb6aa33c3c322800ce4aacd66a563",
-        "c7726ed7a5bbb0a4aa90f844f34427be-f770708f7a3179726444087a39a588fc",
-        "c8184bbe20b3ccd20c7e01ca197f9ef0-4a88b5d8748ea777aec694ac6115c741",
-        "c86afbb2ebf6c72ffa424166f353cc83-98c17e71abe0525f8dc3be8f327aeeeb",
-        "c8de5740e240685e53aae5b39856f37f-67e13a1bfcbd1bb0b8c30deac78dd38f",
-        "c91742762091ea82983b0b7d6b873415-dd69642695b053edbb07f3aaa58ce994",
-        "c9462b014912929fd1f61d8a52cb311c-df256720e97f06feeea1125235564859",
-        "c962fcfcf8397f3c306d2953ae01c753-cbde8300f0ec9bbe5e6950a046a08b9f",
-        "c991909f43127c7eba25373f4c1ad264-4ca18e2d53ad8d6b3eb22160b41c55d3",
-        "ca3ea9e23bc9aa2710486a995c6ca475-e1ad50e826433bbddf7436085ef27c5e",
-        "ca43ee7f854c0d46e4f0c53f5bc72b15-3f03160d8d005c4d56e360a7810dc979",
-        "ca7f519d32fa871bf094634a05b70c8c-a5fa8f758b9304ac8b53570848ff51af",
-        "caa55ec834d217440df50e3b359c0da4-ec2938f39c87cb4e0f8431325e41b845",
-        "cb7a657c18c3fd9af600c5be6f074ad8-838328af16f4aaa5eac53b4048810803",
-        "cc26b24dee4ff66df4f9d0bfb6b728d2-cecec73259cfc0b9481a29d7f9550570",
-        "cc840da63ce45b20dd4eabb2ae801ffe-cf14a9e78c22ee97926eb04c8eb361b0",
-        "ccb778007d5ef6c18cc13d86eb34f681-87955f1f4603451b8a4bb5f5e145e58c",
-        "cd006f2d28d54854bc0b1584dac99927-48b07adc62606069eb20e03b4b37f421",
-        "cd460f1537207b0abd31ea9aa714b88e-3d63ebdd978f7d390f995f8f956d1b7b",
-        "cd7e035d184590e5e2058a157e183f09-35c9c6549b2042a3269776dec768b323",
-        "cd9cad8904f5be166f99e47848d84d4b-762f4c2964968011d49549b57ec17683",
-        "cdb94d1a34c861d4e185192ca9173ccb-d2a67d25f45d662fd82f22d491e10915",
-        "cdeedb7209c1f17b0e60018fb08a3004-f25bb29f9af88d9cf8498edd13120dc4",
-        "cf57750d99079cf7caf21c7dc71ad379-9abca1b377ec0f2dea8e1ae855f93c2e",
-        "cfa81bf060ccd558ebae060a09aa61c2-ea6508cd57d82b034bb6e29ef0b04427",
-        "d17d3e622dcdf2452c6e4008c7496f7c-a7ba3b7e93b9692cf9a3f8ffbd5bee24",
-        "d1b3ae87e07bceeddf27179d81f77e66-309f5cb05acc19cea2b480adb4f18f7f",
-        "d1e04e2ab8f44e6dfb8cf72cb5687c4f-28dad140a1aee273d0c0d7f6363d782d",
-        "d1f5c639d20824a3c6218e974954b1d2-22a1291ae1fce8de25bf07c440f9c6d4",
-        "d26d3a45d3d26c41d64f47a549262450-ef94e2ed1d2ed7d9fcc7546780945f96",
-        "d299a02006a2d79850807f11b6073204-e5c61039b749b424385b4186517468d9",
-        "d3212804abf2cc0ccc7a90d57800b0d9-4a282002098ea83e968d859c725bd39b",
-        "d34393c3fc2bd54e1927eecd8b5e7fad-61f27c165268e480fb6ef6ab4052005d",
-        "d3d630ccd7e1468faa13bb03179c3ab9-647c1971fe87cd7a1d9bb2946a3e4f71",
-        "d40dbf0d1275084176ee370d21bdc22e-55655422e735714ab93517c6202fede1",
-        "d41bb5fd7218944d4efb3a0b34fc1a44-88722e57440568f971bd8a8bb75c81b3",
-        "d42933faf37115ccad4713d20bd6957c-33947d667a46adcd7c86ac3d678611c6",
-        "d51ad5ef840867cb6628ae04cfa29f8d-b9dd88068d96ce1ce1d000c53b2e1768",
-        "d526366ac5786ae9fe1947f9e6a642dd-1eb644d4853847f5e61d53bd6b494854",
-        "d526cf23bbaff7b0a3cd33e36adebd85-327273baebdcbc35fa67fa45477fe93f",
-        "d607916c858c0486c42fd598aa860d1a-8d98080d34eace121dc7eaafad6100a3",
-        "d68e31dab44c8ac731bf2eea9896fb6a-8b639d86f03dbc62c56e12e90a2d272b",
-        "d69b6035432a7f4c17bd82599066bb2d-40c52546aab7ec99bc232a611c17f4e3",
-        "d6b3e939595295d59dade353625f4309-e680de6217e3d4b062e741023f320f17",
-        "d6b88e9e3b80e8d7d1f7b04720b6b51b-c75134d5349d5a39c045fc8b49b5cb6d",
-        "d6f8c660bddee5cac882e1b8d73dfb0b-ac3c41d229c7e12fb623f0a44656700b",
-        "d709f9c750201868a9a6ce108bb9c774-d29791706eb0b1c093ba35f7cd2b0f21",
-        "d754777d4c1b9795607224bca0248b18-208041f4a7acdc108e23b04d9264759b",
-        "d836694618728c815f13569fbac4861c-d1105da4f6d87edf62fe00f18fad800e",
-        "d87ecdf9da10837a5a1650700aa86d1c-36dc59ee35b45c3995dbddd80c762ae5",
-        "d8d7cc42fc1e9ae6281543d261e5f0b2-2050320bc854b9a449079bdab46af2ba",
-        "d92c52488da4f19fcf768b9fef6f0e5d-eaf6c9067f2a13acffd217d3d47f7879",
-        "d95e6b5288b15563efd96dbc34268710-0edcbc4a91d59df63adb58721c1ab801",
-        "da00e9e16eab651171b78d8c78e86703-7cc60382bfcb83bed0c108ce34c1c669",
-        "da21e4d834546e005ceb2e1a4cadc31c-b4108756dee4c1369d5918c6b45672ae",
-        "da3969cf0cbeb60ed05d3f4b05d58241-079928498164c73f755919701e6c8ce6",
-        "da6a87e20dc37ad7f77cdc66f75a7dfb-9b7a31bec7b1dd3ba1f4e5fbf9bc810a",
-        "daa5acb596f197476e56a0759f29bd49-3de881dd5334e9a421ea2d64539f461a",
-        "dacbfd28a24d65f1ead46cb59ded1df2-b2bf454319d5eea89e1bfec802e66ab4",
-        "daf3482e617b0bd978db8c2eff7352c3-9260373a8573f01c89e376ead700dbfa",
-        "db0dacee6b0d5b8dd043e71bd064917e-41e659c47f1ecf1075957c144a0de28f",
-        "db11d569bace8b544e5e34009d9871db-62087520be723cffa20a554f8dc7e803",
-        "db14209ce1fcc4c5c1fd82191c3575df-aac92834ac1ad27c383dc1c119afcfc3",
-        "dbf90e9110b11a77b5708996aa74a8a2-795068ba1758179a7c57d38ec0119218",
-        "dccb77038d29ff63776056df3509b006-7eeb591be9ff350275783a61d5613101",
-        "dcf0ba6a7ff7ab70777b93efe10e4a3f-241dca6b6d55bd7cd1e370bfb879092a",
-        "dd087960b118c8b4941938680f77aa40-facf62f778aea2f9e7ea973259e23315",
-        "dd1d17f6edce0350fb7caf8c68859d6e-b4bcae9d3db40562973816ffc6aacb47",
-        "dd25062feea40a2134895308cc453b56-61cdad6e129c467bdf06fc734d3e84f4",
-        "dd52fb4e1cb1ea1c190e42cdd29db6e7-a1b67921e98350577d716a76f91a23ea",
-        "dd58f546ce8d490a20c71c082d3f8393-2acb2adbbf8aaaf4930ffabfb89599f6",
-        "dd644054c632ec3e8c5d5531f0893903-3c7007cc832e777925025fd3dacadcb3",
-        "de4d1bd5f1cec882120a0b06deb8cac0-7f802e95c3f9ed314c8ede37bad8689a",
-        "de72d36e67a5f50ee5789a4c46a598ce-6100410f94ab5a69d6533fb4364e51bf",
-        "deab8e81a5389f8c6fda34b3fa632a2f-6e27192ab3752f1dffa41113959d7077",
-        "ded0538dfebf9c0550c13263c8603566-4c2ce3b9a920c9e6cb3871563e90c531",
-        "def50cf4df2120a746fb8f3c01b75e17-5781d9a0fbb06752eef8aeda3ef7e89a",
-        "dfa362328a4f1a2db52b834b26b6edaf-e0043165eca560056e22c11e21074c12",
-        "dfbdc0d2362044c303f8c4cb57150d56-b7ef07ee07e38c3689077c3d23dc9447",
-        "e040def25d6ac4263c6dd7e5d6126719-9be22d640778f9ce74edf4ecee93cd56",
-        "e0856ac9195481d9d5335fb3906d7cc2-5a43a58e4860e7e0c2007bc01d2cb8c4",
-        "e0e877995bf49adebe73cd3617d1f3f4-f93370f5bed0ffe5080a0c7d206903c2",
-        "e129a29eb8195221865c974325d1a867-adc225ec307bc84fe4c0c3cb1203e434",
-        "e17a3bcb5847ee65e0adfb356b0af2ec-f108ee46dc11384fe4c669c2afb3161a",
-        "e17e9db4302e1c04b4640e2c4b51b1a0-76882d0e0e856c6ae2f191f7299c7617",
-        "e1860bc90a24bed1c572d7333c7813ba-e687f824349cd2a925b59e106ed07fd7",
-        "e1d4021df00717d278449bba4c09d00f-236ba8b544d2a75c3d29ce4a080142cf",
-        "e20ece6fccb98a764e1f2c21c633f698-a829f955d0324e5152946b68f9a9e0b5",
-        "e292dc9525a5954bcfbf85763d72b8e6-ef240489b74154d8010e68ad05bba5d9",
-        "e2c8e68612abb85f648a06b8b1b6c08d-3ca2d28ac8625a43108a867c26acf5c4",
-        "e2f80a042d84d10ab9f2beb77c9c0b5a-0e9313273618a7ccd7feb56de18f3356",
-        "e31a64e7af810a1a2cec9ed1d69ea00f-1c0d6ef1a5119318793eb4866f941a83",
-        "e357118837ca7f0598df8ff35af736a9-fff9864eb0d10ea15a7887252bd676b5",
-        "e367e7d7d335de0d66af907ea0bd7e1c-bb4aadaeabe371ac3ab5568292daa200",
-        "e3c517cba3bab97741ed97876cc1c7f2-fd70c917b6edc1150c32ce2a8bcd9b69",
-        "e3ffa1f8b6f0c57a3269201ceba32e01-c9dd4ffbe12d2de1c390cb0eaf602448",
-        "e4202a041254c36ac7d93f9277986ad0-4f718dc42e5ba48c95f5883ca89e8df1",
-        "e4a3b484faf89b8d093adb2c3b937d14-0552664409530ed5618f6e6a3d95469c",
-        "e4ae595bc99702938800af9bcc8e598e-1ecf0470cf7090a716d5357b06f7e574",
-        "e4d02a18f119197a7ed34ad7db0a68dd-69160f0a901c7e8a986977bc9d15f2f1",
-        "e510e5e6c558ce285a98ffd572750ff8-b1af62ccc918de9c361b5205fd1d72a8",
-        "e548289e95322d934b3172dcbf98b5d3-2b87811eea8f8703cf436c1476372082",
-        "e57b00ca414c8873a69ebc6c4d3da5b2-49f49ebce2ed00934dbf3344e2402e40",
-        "e5bc2c67e24af02b961242943d58a178-af9d6a1beeffb53a1b6f6aa2647f13ed",
-        "e68dccda9a19d2b84f1562bfe3598b3b-b380147d809a6a660294428d45fc56c9",
-        "e6a9acb67c2e641a9c12d1a004d431db-0022e1ac85acc9caabf1352fa3ac0ac2",
-        "e70ae5988ca2b78dca3f04db117c32c4-dd15ed88904fc18f9765e6cbdc4c3ca2",
-        "e70c1aebeccd3f603d6add3a70735626-ef0c9d5d018cd2543fafd3b137b3e94f",
-        "e74bfe8bc4a0c59afaba17519e7629fc-20bb90fb636a7aabb204148ea9ed734c",
-        "e79e5f87f59e007127acf6b293290cf7-0b00548330196eee743a3eee62c395ee",
-        "e7b5633054749f92001cf13ed408fa8a-2cc9edd0e3a93d3390904fa255f1ae07",
-        "e85e199c9f68c6f9345504355afd96e3-879d4d940a0856443390cd02b7dc2301",
-        "e8c89480b0e7b25941db3734b5714890-49bc74c0ee35614e0abacb7c499b61b8",
-        "e9105cf6aadc46dd2d92ac8b8ce6859c-5be9c4c864445156d12032626fd71a47",
-        "e91d5593dbcaca7667390f7a73fec626-6eab2ae8fc3d3ba2210a245a74f686d8",
-        "e97f2f209f0813188896e9cd70cab51a-68eb3d265a5ea4af14018013330b6ec6",
-        "e9f746c2fcc44cc3f675f8c2aadfd9af-c63826a6571f92a57e19e6554f095d4f",
-        "ea33d94053f5d35d5b3d5988b9f6b61a-db5d6e7dc007ef459dc1dfda1ae60217",
-        "ea3be867c66501d4e17276e4a17ce6d7-b1b808d0cb8c0322297e6ebf3b51dedd",
-        "eaa6ab364c177df5d28936f91af579a7-59a53942e75075c819305ad7ba8b17da",
-        "eb8f3d574465741c5ac6fc26fde00df8-d108254d682470aeeaf0db69ac12b03e",
-        "eba0fd07566b38cd29f31f1424de2266-ccca0419f970b85859477c5d272ef040",
-        "ebec933909ee50139657ac8b59db30fd-db3756ab3d08b98ba2c886ce0f9c61dd",
-        "ec1905acc133068b4bc7dd7b6dbcb633-f693c4fd7591ab2fa445481a58955a03",
-        "ed2bed0c8e9ee7958e0485e5b6912ff9-ea3a801a7cb17a30cbfdc3f6b6830c07",
-        "ed47f0e8ff0ca82cc47c81868b25c9bf-9de438383bd6f9caeb3abbe1bdd15601",
-        "edaa8ddfe2570eafea301cd215f6e7b7-a07869ef6b8d1d67729b77556ca02b8d",
-        "eddf88778d604edbb54a0cca36228728-589838ab169ebcf6a417d7a267a7abf6",
-        "edf3a6bd958df952f1ae1a936e44e115-4a951a99bf4737176e8b0ef43936d584",
-        "ee0623141232d2db471fdddb4b6c4e1e-f7342ceb950f7ff6e8f43f96a16b3e15",
-        "ee0c4b721b62ea1e29eb1396feed0d70-f05da4ebca3d8ddc50c8236cc66bbbed",
-        "ee16ca4dbf3b1bab6d84944150296e15-e5081551dc339467b9020f87970538db",
-        "ef098c4673f42e594ef8940dadc9f5f9-ee78ad196e7ad783d516daa87aef3e30",
-        "ef14a45941c3f5a88e91aedc1260b9e5-81ae2181bd839984dcd15d2b00704bc4",
-        "ef7727b1b859a65d3ecd7f069ccc5f49-127d94c88f3f390aff4794aab68d1678",
-        "ef789849757dd7ab1ce4187cf2d025ff-5585699699950a2fc254341eeffae8e8",
-        "f0352d073913256b1c5f4573f0606ff0-0a5d297fa42af8546ff58a3b8a962e1a",
-        "f060a918b8c84efacd0571bb6f1183b9-5ddce9e7694ba03bd36d8081900e0c9f",
-        "f06492d90a5539f912f04d629af0e5f8-552300bcfa097a93dcdd5ff4f354d50c",
-        "f0d4167b0821ab877942a10ede78fdc7-c58b7a37b338186a6df2c4083d5bbfa7",
-        "f0e898f1d5907a2f62a55ff4437add5f-a70628ad9f94170bbf9a72649d232e29",
-        "f11a8564b76a2621ab3035df82365a38-4b3983a6676bb5414ea6528cd1c7f61b",
-        "f14f02870a4f6aa433be35007c9a2070-d35551279a519180fa3a2e4fea7c69d9",
-        "f188ee5a8dad1e8f048fb4869ba0510d-7c44310d9234aaf161b0cd13b063f043",
-        "f1ed194aa36950d5bfbca583277fde00-2ac5084c7a95cb1ef88a161e3ac76930",
-        "f227a1a99f58726eb657e3862d36ce2f-d54699fdfc77f71c280058a95e159cdb",
-        "f2776a425c9f95a13e27f2af8f6c2084-74ba9a07dd90c4f0bb024d7932dd179b",
-        "f2dcd1117cff26c3bc38b5af49b0ba63-1951ca361ca2e6470c415b53b60803a3",
-        "f308aa3c674e83945de63448b3a85c22-005591de373cc58d7407b0bf55cb76ff",
-        "f30d08433a11dae289525052cc521450-9c355614d5cd47d88ab1223b9763a7cb",
-        "f31c926bbd250016ee5f6f013e342ca6-0107b0705ed391d910cb2eebdf45c14b",
-        "f3767a43f46e5a4dd0b7305714d2634d-aa797b106c38c8c1af680252f99cff40",
-        "f4331ce4e81282eb71ef3d0ff59b6680-3b0ba180ab14ec3029b58f93e0b8c475",
-        "f4c10b6e9d0cf1e7556fb98f89d087bf-b0c1070dac4011392d3d83c579b74042",
-        "f51fbdf20054cb8089feaa2f3f1fe9ac-e523f1bff9fa0c968bbd18aa3dfacb60",
-        "f5497eaeb82d6d7c9410612cde1a263d-e11852e9272b6bc6a55942097b62a72d",
-        "f6406a56a172adbd5b2a2037ec2f166e-bf5c7e0161c8c159903a6a13b5be1f86",
-        "f6b9cd7b3169a5d2241f8f6d5f8324d1-01ff79105943d21f295bc3dd1fbd0c30",
-        "f6bcd054a42a5e79843d1451d4be9572-77064498ad7cca1ab8bdcf10968011e8",
-        "f6f9eedca2b44ad6cdca3de2e02b0319-b7b1e74abc314ed5e7e0ee58f3b58f27",
-        "f7232814b635b2231c8a0ffac6fd9f30-f265c430a797c3002c1af62ebcf2d2d7",
-        "f72665aec494fb5f162ce7595e7a4bfd-f5b4920aa5d5239194a3eac52eed1df9",
-        "f7307d2e01d5b7c6b23c3f662537e20b-7f933ce09fa66ef0e984f129775e365e",
-        "f7949e53ad3c673d7df3d224dc2ff202-f8fee5b7ea6b106015c358dbfc54aeec",
-        "f7e98f54b204d0fd8abb738ff9c24e3c-9418f2be1cd7faba06be78dafda8ad00",
-        "f8585e2559fffc54daaa724e5522c230-55654c2754ecdda65b0bba8b855ac9d4",
-        "f87c433b8eaf3bc950fdbca3f15dab1f-4b599dc49350d72f96332dd247104bd2",
-        "f88cd73bcc591e0d246ee75b179dad70-26ffd57589b0b6610f8675baa779789f",
-        "f8a8c2784e0cca5d9d5c5e89a0f5ad64-bc29f62451fd1483215bd2ee177ec370",
-        "f8fa63074f7963c57624ca6bfc156be6-b70aa1053dd2d86334fbd7221c307337",
-        "fa7326a93f512f8ef87d4724c33f46f2-8fd37258f16d601c8431430eba245dff",
-        "fa806a9c9467b0d5e4a568585e2eb405-bd7f898dd2392a01585acfe55896457f",
-        "fa89bd2783db42937caad3e2eb7afccd-755f6eca8c4bdd22cab49cc8ea6ad93e",
-        "fa8f857760e87fd20c61c81207e49d1f-bd25bc08065a1efd7bb54bcfbdf2691a",
-        "fa90559ba85126d1c291165e56615db0-1aee674bd618b2dfff95c25333a691d7",
-        "fb1368b0bc2cd5e0e4ad6e4917e5aa28-8aa0b2c33d90822b7c130bfcb1a24907",
-        "fc09298670da88f7116aa6f60ecb5b51-8cdbadaeb5e1c017b23d4fbf542c3b91",
-        "fc2ed4fa8ca78f553224066e2bcffc97-c082d6fe69526cbf1bf41ddbb2d2a058",
-        "fc57a2780724024cbd2367ae2601ebc7-d66aa574457fc928d5cff57e4c84a8f2",
-        "fc5a1adc4a0e6df4e5e3c2d51fe59a38-b7d9fd2a28ff99f2ae76c8e97ff7ceb3",
-        "fc73af247e26b3364ed82b27a3db5c90-024a47ab537347f816500987b598602e",
-        "fc7e74ac0709edf7971c56d2cd936858-46b035d9c29aa9b023e65bf5f7038410",
-        "fcbaccb4db05b59c5c0e85f0417ba10e-f3b970992af53894cb61cb749babbee3",
-        "fcccb362f253510b1ed0829d67637ee9-9b7248706c40d9ab6febcfd3eaa3d35c",
-        "fce35bdf1823d25fc9b33ecce21433d7-65c6a849648ccec9e8557435824dd45a",
-        "fd1781a4c33e30735a49613f48df393f-9e144ecffca9038327314070684acff9",
-        "fdeb44a0702f2917fced158560f5553f-ca7884f6c227d0677d9e04cce9bfc5eb",
-        "fe62b884529e5bdc9f71f5a45a6dbe63-54acdbb31f17486a28583aa1156f544b",
-        "fe63a0b918c528eea84d71b6233e019f-9a75e141c91d094c0859efe49507f7f9",
-        "fe9259ad746f9139a14bd8dd7376d710-a4285481fb491a7b38325c276f1cf801",
-        "fed70a39ae79f9a9755de243977ddc4b-a2bfff19c6db5dfa2f3e55c7ed3da2da",
-        "fee9134fbfd2986bd9c163cbc7868375-e78a4372cb380892320ead507721fa0e",
-        "feed09f064e4b65e2225ee3695f19ee2-a4892efe7ffa46faa005e7ed98789360",
-        "ff0155ab361d914d9d96c3d8e8cf96b5-fccf96a038f63f2970e66c917cdb103f",
-        "ff099498211df223453cea9489989158-2ec532a5b29372549bc85cbb69b2cf7d",
-        "ff1c338fbd608f36b5e68668a6df0e57-02eaa761ea29c5419ae7f84a5daaff9c",
-        "ff787f6046dae80a49e4af68f3d3cf01-76ee3311365eeb729aab33bb8259fbad"
-      ],
-      "last_run": "2026-08-03T09:56:59.333Z",
-      "waf_update_warning": "检测到新的 X-WAF-UUID，WAF 可能已更新规则，建议重基线: ['2f77df73721c665caafc22ca57698047-6cfa1df40d4b6a5ad8a7c2c128f8feea', 'c7726ed7a5bbb0a4aa90f844f34427be-f770708f7a3179726444087a39a588fc', 'a9593ee3d32cf590acf498b828f44ca1-1f62f02cd1c4b723d842588eb8870571']"
+  "xss": {
+   "round": 7,
+   "last_run": "2026-08-08T08:35:01.792Z",
+   "dimension_stats": {
+    "xss:semantic:dom_clobber": {
+     "tested": 2,
+     "passed": 1,
+     "pass_rate": 0.5,
+     "tier": "boundary"
+    },
+    "xss:mutation:mxss_mathml": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "xss:mutation:mxss_comment": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "xss:semantic:parser_differential": {
+     "tested": 3,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "xss:context:url_proto": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "xss:semantic:polyglot": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "xss:context:import_map": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "xss:semantic:detection_rotation": {
+     "tested": 2,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "xss:obfuscation:indirect_exec": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "gen:case_flip": {
+     "tested": 8,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "dead"
+    },
+    "gen:tag_case": {
+     "tested": 31,
+     "passed": 2,
+     "pass_rate": 0.065,
+     "tier": "exploring"
     }
+   },
+   "confirmed_techniques": [],
+   "dead_primitives": [
+    "gen:comment_split",
+    "gen:case_flip",
+    "gen:handler_split",
+    "gen:tag_case",
+    "gen:comment_split_all",
+    "xss:context:event_more"
+   ],
+   "pending_directions": [
+    {
+     "desc": "深挖 xss:semantic:dom_clobber（通过率 50%，已测 2）",
+     "basis": "boundary:xss:semantic:dom_clobber",
+     "priority": 0.25
+    }
+   ],
+   "history": [
+    {
+     "round": 1,
+     "tested": 63,
+     "note": "round 1"
+    },
+    {
+     "round": 2,
+     "tested": 48,
+     "note": "round 2"
+    },
+    {
+     "round": 3,
+     "tested": 85,
+     "note": "round 3"
+    },
+    {
+     "round": 4,
+     "tested": 74,
+     "note": "round 4"
+    },
+    {
+     "round": 5,
+     "tested": 6,
+     "note": "round 5"
+    },
+    {
+     "round": 6,
+     "tested": 35,
+     "note": "round 6"
+    },
+    {
+     "round": 7,
+     "tested": 52,
+     "note": "round 7"
+    }
+   ]
   },
-  "knowledge_gaps": [
-    {
-      "scenario": "all",
-      "signal": "知识库覆盖不足（32%）",
-      "suggestion": "知识库大量原语未实测，先探索未用原语再决定是否检索",
-      "research_topics": [],
-      "unexplored_primitives": [
-        "cmdi:lexical:default_value_split",
-        "cmdi:lexical:empty_cmd_subst",
-        "cmdi:lexical:empty_special_param",
-        "cmdi:lexical:ifs_variants",
-        "cmdi:lexical:octal_ansi",
-        "cmdi:lexical:redir_space",
-        "cmdi:semantic:decode_exec",
-        "cmdi:semantic:env_assign_cmd"
-      ]
+  "cmdi": {
+   "round": 8,
+   "last_run": "2026-08-08T08:39:09.571Z",
+   "dimension_stats": {
+    "cmdi:lexical:ansi_c_quoting": {
+     "tested": 2,
+     "passed": 1,
+     "pass_rate": 0.5,
+     "tier": "boundary"
     },
-    {
-      "scenario": "sqli",
-      "signal": "停滞（两轮通过数无提升）",
-      "suggestion": "该方向已榨干，换方向或联网检索新技法",
-      "research_topics": [
-        "sqli WAF bypass new technique"
-      ]
+    "cmdi:syntactic:logical_chain": {
+     "tested": 3,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
     },
-    {
-      "scenario": "xss",
-      "signal": "停滞（两轮通过数无提升）",
-      "suggestion": "该方向已榨干，换方向或联网检索新技法",
-      "research_topics": [
-        "xss WAF bypass new technique"
-      ]
+    "cmdi:semantic:env_char_extract": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
     },
-    {
-      "scenario": "log4j2",
-      "signal": "停滞（两轮通过数无提升）",
-      "suggestion": "该方向已榨干，换方向或联网检索新技法",
-      "research_topics": [
-        "log4j2 WAF bypass new technique"
-      ]
+    "cmdi:syntactic:parameter_expansion": {
+     "tested": 4,
+     "passed": 2,
+     "pass_rate": 0.5,
+     "tier": "boundary"
+    },
+    "cmdi:lexical:redir_space": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "cmdi:syntactic:process_substitution": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "cmdi:semantic:printf_write": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "gen:ifs_sub": {
+     "tested": 5,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "gen:logical_chain": {
+     "tested": 85,
+     "passed": 8,
+     "pass_rate": 0.094,
+     "tier": "exploring"
+    },
+    "gen:quote_split": {
+     "tested": 36,
+     "passed": 1,
+     "pass_rate": 0.028,
+     "tier": "exploring"
+    },
+    "gen:backslash_split": {
+     "tested": 36,
+     "passed": 3,
+     "pass_rate": 0.083,
+     "tier": "exploring"
+    },
+    "gen:quote_split_all": {
+     "tested": 26,
+     "passed": 4,
+     "pass_rate": 0.154,
+     "tier": "exploring"
     }
-  ],
-  "corpus_curation": {
-    "applied_at": "2026-08-07",
-    "note": "样本库已整理为只保留远程实测通过(HTTP200/waf_decision=passed)的样本: 970→205 (sqli 191, cmdi 13, log4j2 1)",
-    "archived": "samples/_archive_20260807/ (removed_samples.jsonl + removed_tests.jsonl)",
-    "impact": "dimension_stats/history 为整理前的探索记忆(含已删的 blocked 样本); 后续 run_round 会基于当前 tests 重建"
+   },
+   "confirmed_techniques": [
+    "gen:quote_split",
+    "gen:backslash_split",
+    "gen:logical_chain",
+    "gen:quote_split_all"
+   ],
+   "dead_primitives": [
+    "gen:ifs_sub"
+   ],
+   "pending_directions": [
+    {
+     "desc": "深挖 cmdi:lexical:ansi_c_quoting（通过率 50%，已测 2）",
+     "basis": "boundary:cmdi:lexical:ansi_c_quoting",
+     "priority": 0.25
+    },
+    {
+     "desc": "深挖 cmdi:syntactic:parameter_expansion（通过率 50%，已测 4）",
+     "basis": "boundary:cmdi:syntactic:parameter_expansion",
+     "priority": 0.25
+    }
+   ],
+   "history": [
+    {
+     "round": 1,
+     "tested": 99,
+     "note": "round 1"
+    },
+    {
+     "round": 2,
+     "tested": 353,
+     "note": "round 2"
+    },
+    {
+     "round": 3,
+     "tested": 186,
+     "note": "round 3"
+    },
+    {
+     "round": 4,
+     "tested": 176,
+     "note": "round 4"
+    },
+    {
+     "round": 5,
+     "tested": 187,
+     "note": "round 5"
+    },
+    {
+     "round": 6,
+     "tested": 150,
+     "note": "round 6"
+    },
+    {
+     "round": 7,
+     "tested": 121,
+     "note": "round 7"
+    },
+    {
+     "round": 8,
+     "tested": 201,
+     "note": "round 8"
+    }
+   ]
+  },
+  "log4j2": {
+   "round": 9,
+   "last_run": "2026-08-08T08:41:05.178Z",
+   "dimension_stats": {
+    "log4j2:lookup:exotic_protocol": {
+     "tested": 3,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "log4j2:lookup:hash_fragment": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "log4j2:lookup:dotless_i": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "log4j2:lookup:lower_upper": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "log4j2:lookup:empty_default": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "log4j2:lookup:sys_default": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "log4j2:lookup:deep_nesting": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "log4j2:lookup:env_default": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "log4j2:lookup:info_disclosure": {
+     "tested": 6,
+     "passed": 1,
+     "pass_rate": 0.167,
+     "tier": "exploring"
+    },
+    "log4j2:lookup:non_exist_lookup": {
+     "tested": 1,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    }
+   },
+   "confirmed_techniques": [],
+   "dead_primitives": [],
+   "pending_directions": [],
+   "history": [
+    {
+     "round": 1,
+     "tested": 8,
+     "note": "round 1"
+    },
+    {
+     "round": 2,
+     "tested": 8,
+     "note": "round 2"
+    },
+    {
+     "round": 3,
+     "tested": 12,
+     "note": "round 3"
+    },
+    {
+     "round": 4,
+     "tested": 14,
+     "note": "round 4"
+    },
+    {
+     "round": 5,
+     "tested": 10,
+     "note": "round 5"
+    },
+    {
+     "round": 6,
+     "tested": 26,
+     "note": "round 6"
+    },
+    {
+     "round": 7,
+     "tested": 6,
+     "note": "round 7"
+    },
+    {
+     "round": 8,
+     "tested": 6,
+     "note": "round 8"
+    },
+    {
+     "round": 9,
+     "tested": 17,
+     "note": "round 9"
+    }
+   ]
+  },
+  "upload": {
+   "round": 6,
+   "last_run": "2026-08-08T08:40:10.388Z",
+   "dimension_stats": {
+    "upload:content:scriptlang": {
+     "tested": 2,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "upload:content:short_tag": {
+     "tested": 3,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "upload:content:dynamic_function": {
+     "tested": 3,
+     "passed": 0,
+     "pass_rate": 0.0,
+     "tier": "exploring"
+    },
+    "upload:config:htaccess": {
+     "tested": 2,
+     "passed": 2,
+     "pass_rate": 1.0,
+     "tier": "exploring"
+    },
+    "upload:config:user_ini": {
+     "tested": 1,
+     "passed": 1,
+     "pass_rate": 1.0,
+     "tier": "exploring"
+    },
+    "upload:ext:double_extension": {
+     "tested": 1,
+     "passed": 1,
+     "pass_rate": 1.0,
+     "tier": "exploring"
+    },
+    "upload:multipart:filename_star_conflict": {
+     "tested": 2,
+     "passed": 2,
+     "pass_rate": 1.0,
+     "tier": "exploring"
+    }
+   },
+   "confirmed_techniques": [],
+   "dead_primitives": [],
+   "pending_directions": [],
+   "history": [
+    {
+     "round": 1,
+     "tested": 14,
+     "note": "round 1"
+    },
+    {
+     "round": 2,
+     "tested": 10,
+     "note": "round 2"
+    },
+    {
+     "round": 3,
+     "tested": 15,
+     "note": "round 3"
+    },
+    {
+     "round": 4,
+     "tested": 5,
+     "note": "round 4"
+    },
+    {
+     "round": 5,
+     "tested": 12,
+     "note": "round 5"
+    },
+    {
+     "round": 6,
+     "tested": 14,
+     "note": "round 6"
+    }
+   ]
   }
+ },
+ "targets": {
+  "tencent_waf_prod": {
+   "seen_waf_uuids": [
+    "f8c40b9509c1ff61e5f24389b4f8ac3f-c7b04f7ffb3e598d814c62bbaa68b407",
+    "f8d03568733bd9b4135dff5bbea57e07-312afd38aa739c0229e3122b4f8ec08a",
+    "f8d4acae69bd705c80587c46c669699b-9e5f8a7ca667dc21aa744706c361f91f",
+    "f8d83e5eb3ce7b38f4f50bb31891a2eb-a1863fb62481a24b13ace19d60ce8591",
+    "f8edeb22435e91abce77adac467b2b08-95dd764525eff35c7acb91483567ebc5",
+    "f8fa63074f7963c57624ca6bfc156be6-b70aa1053dd2d86334fbd7221c307337",
+    "f907c492600f14e9e33cf5c742080480-c0853a06fdad11d0f64aae4b2f57a009",
+    "f908381f7841affd4863d5f5db32c116-16a13eb71f29d8c33581909c302f036e",
+    "f9102972690442c719ce2433c629dad1-21a2d7e754be3cd541d22118a49fee95",
+    "f91376e2055810ee548cb17056961fc8-5e23047e3d8bd63e79407f52ca2d55e8",
+    "f913852c26c4b5b1f1ffa99b97e80093-9ea28ce96952c47c701141e73d9678f2",
+    "f91ef8d16a02db9e376a5642e0945ecd-9381fd9c004bd3072ba5eb9a1344a4c1",
+    "f920ae5a359727e67c34726c2540b16d-c71285ddd9bb82ce8a35f512cafe67fe",
+    "f929a0754ee1344398167281675dc03b-6d8046bd56bf4032a438e10c2a7b4c25",
+    "f93aefddc7a0f7511dba9df023a1c982-dc71efe686e96039a85e228e46b3e8c0",
+    "f941d5bc8c8561aba203c39ef55873c8-4896086f4f0d7c4e5f49352dcb6915c0",
+    "f9494ae7bcafc9ff71f096046ff04d56-65f493b2030e2cdd06d5f0436db70635",
+    "f94b04cc3343e3f90134dd7ce1945a1c-4dac47c3f37b34d99c5732b18dde07dd",
+    "f94d5e64473b2e7417e931f5266ca69c-945a40f922316c2fb259582f72700b19",
+    "f957ef85990aec317658b91a6e05fe9b-a38a3206ce37fff9f29c6ff1a9257fa5",
+    "f95fcde2c034e25dac1fb5d4274da4aa-babd8d3cadaf44ee1d7347287aac5fc3",
+    "f96b72b1b4962560e30f755e0571181b-865bbef84a160176281c232e0df6e047",
+    "f9785de7ffdd6f61d461bb34da9d0035-7008a872a429e55a31be50cdec7ade53",
+    "f987db6ded7f7a0ce7a773d620f57fbe-9abfc67c7a48ec62e81613125fa58049",
+    "f988fbf8774d8461b51593890824312d-c0cac7a221f5b7b8cb94969fd3683a04",
+    "f996565f96be4485796218b3d5e8c6b9-d73732057f5688c867398164761d2b12",
+    "f9a426fa6fd526f442609331dea34486-6034ca9cf3280725fbcf66e0829e96e8",
+    "f9b289c6342c778a62659467eb5106d0-5857c2d1d0f5d74b721a561624759fae",
+    "f9b852c059f4c8affe670b494fdd6fb2-6ecde8ab5f0a1571e29be48db74ad200",
+    "f9c5f81bd39cea1ec4762170ec3f64e0-c56faee90390c9aa01c0a123cd344235",
+    "f9c7cca3d722fd63576bcf3498857579-c3a5f5e9a02deacf7cf341e4fc1abb4e",
+    "f9c9cb013820c1385260780879785bf1-598d1386a0cfe2f3de82c2a2880cfc23",
+    "f9d6725e4951d0632c5ed4ab0cc27bc6-a6e5aad412330d5347a8397ae328a233",
+    "f9edcccf78ddecb29dedbcf3cdbce1e8-eef9aebc03bf74a88967e39ceb809b8c",
+    "f9f6443fabb17f085b190e086e80200c-022caec0cf49977c1e209a898f5484b5",
+    "fa0a78747c29111cfde623ef9ad7260f-cd4349ac9cc0b1bd46a65404fa9aa6ca",
+    "fa18e687feafb46d89b7ff2da778c9db-d3ea5b51f316a82f0eabe0f89a3831ef",
+    "fa24d3b9e244f1cd68dc97a0a6a820de-353398aee1fed141e4ee94b1e1b515b9",
+    "fa3234c6abb7d5485a8d6b3c98fbab16-bce8e511ea171c170e6b77e8ea4dedcb",
+    "fa3647f8ad7006873aa9311836cbbf17-e11500afd3ce010b344687612828b06c",
+    "fa4ba21c1caea18ca913a112b3da4dbc-c382383f4b63085bc461ff7e5f40d0ba",
+    "fa559b040e2e8923c6797470c9d39fe8-920741af25af1cde7aed286ee3e6e4a3",
+    "fa57a3408ef5fe5f599b553722f8007c-3ec0d646f3aec4e3597c26b5434cecbc",
+    "fa69223fd29d4f5a0d80807410a55b15-10f005c32a343999425d7ac18307b4ab",
+    "fa7326a93f512f8ef87d4724c33f46f2-8fd37258f16d601c8431430eba245dff",
+    "fa782ad8af120c4be118deb684dcd91a-3fb4a1200e67d4fea9ee06c0b869f958",
+    "fa7b4bb5dec9812375ca4788821373aa-7e63b47a2d45751a140f490d3c25e372",
+    "fa806a9c9467b0d5e4a568585e2eb405-bd7f898dd2392a01585acfe55896457f",
+    "fa82dfdafc89a9093a0f1ec85a4b5c46-56527a2c12827ac0868b084c63c2c319",
+    "fa834837ece402b70c92d4968f01b236-2ab82292390b0933b9fe8478ab818566",
+    "fa89bd2783db42937caad3e2eb7afccd-755f6eca8c4bdd22cab49cc8ea6ad93e",
+    "fa8f857760e87fd20c61c81207e49d1f-bd25bc08065a1efd7bb54bcfbdf2691a",
+    "fa90559ba85126d1c291165e56615db0-1aee674bd618b2dfff95c25333a691d7",
+    "fa9162aa0ea7c4eea7a9fc123eb16930-05ed694e63946218f26a3c8e9da5d1bc",
+    "faa1f15d03c00e3a3c74aa210d3eb685-f42a47b78838e385309f323bee97f90d",
+    "faa8c7d87370d60310914eb3b6bd685b-bf4502c060e14313b7a7b91498e638e0",
+    "fab08981da621c32f180d1cd5e713b0c-6883fe689556a715c6c350e03f85e9fc",
+    "fab51debd9bb932e1d28d4eae76daef8-970dbd64323a3793ceda221a1b14aa69",
+    "fab8a169b2d397a9845a7cc69a4751f5-9a8ab6d5fe8e5605d5a924a4cbb1a27e",
+    "faba4434d284950e89e49e4f9b1c21c5-2f59abe7eb9828304d40d8e416d2f4e8",
+    "fabc253bfcae109cddb194f3662ff1e4-25732c416397e95949c686fffed032ec",
+    "fadf020b4423adfcab0eb44cd3106c6d-2146162812d016e1f233448693cf9be1",
+    "fb1000a5085299cf9cfe820a228b7d01-400aa9d0cd41de884ae6b02153a58bcc",
+    "fb1368b0bc2cd5e0e4ad6e4917e5aa28-8aa0b2c33d90822b7c130bfcb1a24907",
+    "fb1cb11aba5b85ed5de919d32eb1f87f-3d7e67e185a6d886c4635e76d9128c62",
+    "fb241ba718b6610b527d55a4c0c50162-6f120cddcc7a424ee1c69745fb1a9225",
+    "fb24215d308f2191463e631a4138ea39-9e874f62c35cea829db8227d9e475193",
+    "fb25ae647eddf9436b9f8d4bffc1e827-36f89a09b1409ee3d35ec02f4c37bfea",
+    "fb35f8dd12a9b3f82ea688d2cdf5bb98-54242d1189bf81d41fda16ed2d391093",
+    "fb3aaafde69465204a465cb535578125-dac4d249bcbbb84420faa2f97396bb83",
+    "fb4c38fcb3367c9e1ff488bce3b1bb5e-9aa474911b0efe317cfe16a93835b1ed",
+    "fb4ed324bbb3d62db5298e0830150ca0-77ac71406eb4c467063ea31f7a60b009",
+    "fb591c8764e9ba03de03941c0cbd438f-f6dba20cbff6017d1134a158d44f9801",
+    "fb5e8a65c34412ab970c38872816f714-1e4e2338ab8b8f8dcdd21394e05a4605",
+    "fb706cc185cab4cf728ebbcb005ddc17-c9d0287e1505bd90d90da2fbe3d01f69",
+    "fb72337ded33202851f6e2c404b5c4ca-d4d85c62f3d3a479b4a829dc0a795f52",
+    "fb820aa5fdb9175fa8f9e9b8540eb728-aaef9bd2a9291ece1362727e6926c76f",
+    "fb8fdbc0013578dc5e7cda908e6776fb-1f97dbf442af21a5220e4cf8c2c0f4f9",
+    "fb8ff79946847eb2e8dbf40b48f16939-f4483eb5f4a560a71b7690e391ad94a4",
+    "fba254637bdba988bcf7852b51f83392-3c5c53a0b2a5efd64f47191f45661863",
+    "fbb7f7c8d10385f533c4d6d2d877612b-233211b1e82cff034ae299a6064b98fd",
+    "fbbbbecb6dc2f7ae4b4017fc630f9435-b8c90a36db643be05152ca021f30c52d",
+    "fbd35c91029332033ce7cea4f331b0b1-55e8361b891c4faa46bf825dcf908dd1",
+    "fbd40aaea995ecd4794eb0afea70362e-1721b15b79ccb42507579a1dd629ee2e",
+    "fbd9312230fb2f9ca82be389995cc92c-520b081db3b32a226ad5a68863aa958f",
+    "fbde2ece4311723c8dfa9e3b072de34b-e20a0e7442aa4896bde5b7cc09c9d6b3",
+    "fbe078e4c69eae1d14f21c2f2db286ac-6bccab69026dffba6bc77055b3fa9029",
+    "fbe0b68cff5b893e0d7c53a4b445d254-287b0d541ad436e2b1a6776c126668e7",
+    "fbfc85b60e4b9aa49c27506ab168481c-6a14b577821fca04b4f0289ecc2c94b6",
+    "fc09298670da88f7116aa6f60ecb5b51-8cdbadaeb5e1c017b23d4fbf542c3b91",
+    "fc0e36b0a906067c8e421f0cf7f0c478-bdf2529f01865d9ed29d49ec636218b6",
+    "fc0ee107b5d59e4d0a208e8b438aa87b-88aa8f664b51488f23a02ac5b3da347f",
+    "fc1c632205da7946ff3bdac79e9d621d-e5583c23462d3270194de94df900cb75",
+    "fc2ed4fa8ca78f553224066e2bcffc97-c082d6fe69526cbf1bf41ddbb2d2a058",
+    "fc32a70f095fc79be5208aa5d7a463ef-95e395e5fdbbcb6996732af897d3f1d9",
+    "fc56f99c417e981bf2b4d8ed2f82c4f6-10118f063a301b0c1c2c6f55ebfcfa23",
+    "fc57a2780724024cbd2367ae2601ebc7-d66aa574457fc928d5cff57e4c84a8f2",
+    "fc5a1adc4a0e6df4e5e3c2d51fe59a38-b7d9fd2a28ff99f2ae76c8e97ff7ceb3",
+    "fc64db1435ab330f4e99e960cbb5886b-feef217a21b9e9d132f5fb6587564e43",
+    "fc66fdbd1aff9d93a12e29598ff8ec2c-e4f4ee2e027a723f5d1ec635733da29d",
+    "fc6f06aefc369247b9fbb954ae102b58-86ee7254083910d8706f3802ad03d8d1",
+    "fc73af247e26b3364ed82b27a3db5c90-024a47ab537347f816500987b598602e",
+    "fc7e74ac0709edf7971c56d2cd936858-46b035d9c29aa9b023e65bf5f7038410",
+    "fc8da6fc83f46dd4a04bb69c702a3f30-11fb480bcef65c7557f165746d1413fa",
+    "fc9421fdf6cd1bdca7d3f748a6aeae27-0c16743465179e860134b0d92e321da4",
+    "fca0b53bd69e1c958fd64b8631657c53-f4e2ba982fbbe9f011262965e4909860",
+    "fca321975f8de6d903f63fa796ad9e27-6379b39c5f6358da045839694bb819a6",
+    "fcac074e7050bbe5c836d654c89d8c57-6ba01e71d242bce3ea9cf4115bb7ab54",
+    "fcb2dda7e945c0401eb0966613420806-884679e0c33980acccf50afdd8328218",
+    "fcbaccb4db05b59c5c0e85f0417ba10e-f3b970992af53894cb61cb749babbee3",
+    "fcbbafffc93c702c494efb34e084ad66-6d0f99b74e3a8a119390b0936d1ed889",
+    "fcbeca6e66302e969c681dadeaac62e5-ecdbb8e71a53198668755e2e4d65011e",
+    "fcbf83d1d92c84c93d93ca0a931ddad6-a68d8596845b70c490a3c6c529659282",
+    "fcc2a3e781da1a89adb3e8cab50b7838-e3c975776a8302200cf32324fa7287b6",
+    "fcc40eba78b78ad8457ed250fc1bd5f4-2ea99e1a154db1bc00aaa1114d225a33",
+    "fcc865b02a63e7b701c72f7f509c9c5b-f824e0f9f1665c7376cfc770a1975e83",
+    "fccc5aedee77ef9f8c2e58a4b009c739-50e5bff035673b3056f0a8cfc93582d2",
+    "fcccb362f253510b1ed0829d67637ee9-9b7248706c40d9ab6febcfd3eaa3d35c",
+    "fcd14c433222ff1810bd4f9938080a8c-5444f3071d3310a4a995d46958577988",
+    "fcd4ce69f17684f600094a88dfe6947a-a54e3f817c4a20c1de7c35506dc4d840",
+    "fcdb08db74676b8bafe40fd7da7356eb-a44d49301c191bea309a408934b3bbd9",
+    "fce35bdf1823d25fc9b33ecce21433d7-65c6a849648ccec9e8557435824dd45a",
+    "fcf07061b08f8ce95c27c955db056fd0-9c7cedb6862fdb3fafe9295dd64c136b",
+    "fd0bb0391d7b2b7397a7001147bd8e60-c9e2f73cb8347d02f659f957f7b74186",
+    "fd1781a4c33e30735a49613f48df393f-9e144ecffca9038327314070684acff9",
+    "fd1fd3df154e442fb8a54840da048706-d2ac2d7d2ecdc92a72f355b67d38a543",
+    "fd20a19879980e358593e7cb56e2d652-87eb633f8e5c5ca96ec371613074c60b",
+    "fd2855c204aaa2f447d75299ec0b9005-976e8cacddff4449c7b62e7049ee118f",
+    "fd33c708cbc7e8ef4124aadfe037a8c5-9fd5e74531ad96a2786e75040b20d147",
+    "fd39e6cace4863256111bd612c4be972-bc65bb26779d45cbf2a58fd85a8ea6b0",
+    "fd5ba669fdcf29aee13a7ec67324fae4-7ad8634bd93bcc45e330182317910c41",
+    "fd5ff9f9e8ff5d5894e8c27d21781d68-89c47165cdd7c5211a56e754a6ccc5f7",
+    "fd7b7e254b7d2ad365190ccea17e83af-99d8fb60707ae1bb1ef908137dbf3140",
+    "fd832519c02a3d938a13ff1867d8b598-e0d040e469a754a7e3d87608676919ce",
+    "fd83ae33a2dabb07019bb3c5bcaa4135-894bb4fba77d0fa2bb2f6eb2be274313",
+    "fd8550c0420c2dd5da2d6691da78a070-1960f573a861b6b1eb304d283833d2f1",
+    "fdb09182d58d59f40f4eb7c0293db56a-952654f8dc127c0a860108024c545614",
+    "fdb9764e17bdb31aeb5ace437406448c-038ac836c6fad2fd3c630c1b83b44c0e",
+    "fdba5964db5b6aa3a5528c7b28fc324d-2d05eb50bd7cc666f571e4015cf5533b",
+    "fdc0c9552272ea3e993edc2d3194a99d-74aee03264e1a97568bace160dc46c71",
+    "fdcc5c758eeadcc27e250e9b3bc7694d-77a2c099f0e2dbc5623578b1d5487311",
+    "fdd7f224cc6766fce53a9a5c1c711bb2-35ab5c5f146ab9b8893a59f775fc3617",
+    "fdde954f2b7b6434fbe53848fb8c714d-ef327cf6e3b7fef7d442179762136d83",
+    "fdeaeffbc06ff1f7d40050809a4936e9-263cb2a260ce3791eb69026257b3b310",
+    "fdeb44a0702f2917fced158560f5553f-ca7884f6c227d0677d9e04cce9bfc5eb",
+    "fdee3660826159a2921f6f7a2445bc90-90d617f2b43b81e539ac120527379275",
+    "fdf020a09f527014c9bfcc8fad384457-1bd63baa0b3bbebe9d17f47d3d676b61",
+    "fdfa8ec3bb563f9f857d0deaa1a5ddd7-6853061767304cb205af6772b4fab1b7",
+    "fe0d29f26f625a0a19b9752afcdb3372-335490740ae333da54c2de7053174c6e",
+    "fe298deab5fd29e9bae4e44ee83ceae9-fae665edf09977c560ab63603708f25c",
+    "fe2cef4822a57917066b431097543d80-77154c252e596e2e68f2350fc9233713",
+    "fe2f2e0ad476ca1981d35fd4b01e0778-29edb409e04fdc92eb875f337cc0f754",
+    "fe430fa37a4f87b0a6b7a5bc193b29cd-9b8cab5ee9ae39eeb80b54314a635350",
+    "fe4d679f6108bb65c206a11c4ac024e3-e79fbfd89355dc125aa992ddc5d6e58c",
+    "fe52fcf28731a5143f6a5bd0271b4d2c-4f30651ffd023730a9a376bd17e12275",
+    "fe53b5a29dbb98b01776b99242a2cc6d-efb9864d957ba6c1721b7eee95467231",
+    "fe62b884529e5bdc9f71f5a45a6dbe63-54acdbb31f17486a28583aa1156f544b",
+    "fe63a0b918c528eea84d71b6233e019f-9a75e141c91d094c0859efe49507f7f9",
+    "fe6fb4443bb706451f2974cde6a7d066-4cb107478bd0e032c37192b99cebaee8",
+    "fe71010afc5101d058b7712e419654b7-8f210c8e4204bd0be4ca935f094fda3d",
+    "fe7eb233751b0a5f782223ac25b0f0f3-b6b7bf616126bf4da6d59213fc936418",
+    "fe83f167eea8e74fd3b5bceb238d1dd0-51eefca64ce56adc1201e926abd40c2d",
+    "fe924fe28afc7abd59e4e03303ae34ee-ad09130431f9f9ccbb3c8328ed6f6bb3",
+    "fe9259ad746f9139a14bd8dd7376d710-a4285481fb491a7b38325c276f1cf801",
+    "fea1fe929b7172820bdd0af37fad8e52-39718fd8fd2e2fffb702d41f4c530663",
+    "fea312ed24818534249d3f8edd963226-895bf7819e11ff7f30bdaa7908f86a95",
+    "fea4f76df4989b2ce9f54b1c7cfeb3af-0b9a0aebca93aa2664e794e9bef9b0f0",
+    "feab83310d8108bda78a54e2f3535acd-98560774d34538b4606729f4f8271d30",
+    "feb56d72685b328d7ae506a3723dea5a-9993bb4811ba17188b15604dde947075",
+    "fec8aa8c7a8df5afe84feb8da5a848d7-16a41b27a57f938e2b15b2ee5a5c0d85",
+    "fed70a39ae79f9a9755de243977ddc4b-a2bfff19c6db5dfa2f3e55c7ed3da2da",
+    "fee02d412315280d22d17c4d38c98640-815b2e8efa252e49781a87bfddc1a294",
+    "fee9134fbfd2986bd9c163cbc7868375-e78a4372cb380892320ead507721fa0e",
+    "feed09f064e4b65e2225ee3695f19ee2-a4892efe7ffa46faa005e7ed98789360",
+    "fef11ab3cec8c1f008209e7ea6aecce6-22f701b1f422ef8bdc55374cbb9d2e95",
+    "ff0155ab361d914d9d96c3d8e8cf96b5-fccf96a038f63f2970e66c917cdb103f",
+    "ff099498211df223453cea9489989158-2ec532a5b29372549bc85cbb69b2cf7d",
+    "ff18e3b433322ce9eca32470207d94c5-83747ae2f4e6f29104dd5b7ffae439b6",
+    "ff1c338fbd608f36b5e68668a6df0e57-02eaa761ea29c5419ae7f84a5daaff9c",
+    "ff1d3f759d02bf3e2e5c6ff04d578aee-45d00c5a5f4f34c0543f7287eb71db5c",
+    "ff20871f2d8f6806a7c665a1ab4e2adf-cae688d0f52da6a48abc7c5ab9a42a1e",
+    "ff25d8d15a086deb76a14975ca4e208c-af92a61e2449fd00017470d3fe9cf5d5",
+    "ff28021e893010753b9286673c52034e-f0ea20a5d715a56b16f03cf8fac9e73d",
+    "ff2a33bd00cdf9e35b5581c9062c2ce3-5f19f3f40a3b862facb5ff5da0fff28b",
+    "ff2cf7e7525b892fe9c93ebb966166bf-0d177e6e4dc725dbd3fd5cd11f46ffaf",
+    "ff377444ba87da53ba918826c326bc1e-020c9e86b2ce39b70ad26bc085e3b56d",
+    "ff477be02ece9084e340d520c5c5ee4f-e59ff0bc3954e5de356902a6cf671f0e",
+    "ff4f5b2d74a47c304f6875028ae0ef42-a4920619cab15399df769bd61bbbca83",
+    "ff585bbfe0d126fde9808c66039e88fb-4c20b35e4fc6560a411ed255be3dd480",
+    "ff6172bae15ba74f0942984b360cef42-8f624fe3671d7d4cc18adeaa761c20ee",
+    "ff6aa9af92ba5c2681983ad104bdb56f-5f5c3285229f2a776e19afbd2203dd4a",
+    "ff765cd8bc5ce054f6df9be2a9f4c1b0-132bda9eaddb52ee0442af38a21c40b7",
+    "ff787f6046dae80a49e4af68f3d3cf01-76ee3311365eeb729aab33bb8259fbad",
+    "ff7e8b9b3f0beb7698eef5e85f1c68c2-38cfc7c4b83319c433b02eca4306fc41",
+    "ffabb57727eaea324b188fc7528ffb3c-d909a5b62eaceff820bf0248435dc875",
+    "ffb716bd3874b56bc657032cb19799fc-a2f332317483029d1ece70adb14f1026",
+    "ffc5ae67c90aa51a1cf658fcac822d56-49e0b559534e73e2113850660acfe57b",
+    "ffcdb10a737b99820b013d67a676b0be-5445ecf6dc20a30c67718357ccf5f70a",
+    "ffcf95f90d3fb513614192ad3fa87f8e-acf3651f9f0dc1e83693bc7e3f2d91ee",
+    "ffe8266b898c9ac91d794620bc1fa5aa-cb8741338135f8cdd59ffc35550970be"
+   ],
+   "last_run": "2026-08-08T08:41:05.178Z",
+   "waf_update_warning": "检测到新的 X-WAF-UUID，WAF 可能已更新规则，建议重基线: ['069cdd8645abef02851ab163f3a1bacb-37a6f498749dca14976ffd68d48441f0', '34c27a397ad5ff98253807b8f8650168-73e0b95ee6c1fe47ae0e9d29280fd881', 'da90250bd54aec5f5745cf48f6a3dd45-f12fe20f54ecb1be40f8243e3041d8ca']"
+  }
+ },
+ "knowledge_gaps": [
+  {
+   "scenario": "all",
+   "signal": "知识库覆盖不足（32%）",
+   "suggestion": "知识库大量原语未实测，先探索未用原语再决定是否检索",
+   "research_topics": [],
+   "unexplored_primitives": [
+    "cmdi:lexical:default_value_split",
+    "cmdi:lexical:empty_cmd_subst",
+    "cmdi:lexical:empty_special_param",
+    "cmdi:lexical:ifs_variants",
+    "cmdi:lexical:octal_ansi",
+    "cmdi:lexical:redir_space",
+    "cmdi:semantic:decode_exec",
+    "cmdi:semantic:env_assign_cmd"
+   ]
+  },
+  {
+   "scenario": "sqli",
+   "signal": "停滞（两轮通过数无提升）",
+   "suggestion": "该方向已榨干，换方向或联网检索新技法",
+   "research_topics": [
+    "sqli WAF bypass new technique"
+   ]
+  },
+  {
+   "scenario": "xss",
+   "signal": "停滞（两轮通过数无提升）",
+   "suggestion": "该方向已榨干，换方向或联网检索新技法",
+   "research_topics": [
+    "xss WAF bypass new technique"
+   ]
+  },
+  {
+   "scenario": "log4j2",
+   "signal": "停滞（两轮通过数无提升）",
+   "suggestion": "该方向已榨干，换方向或联网检索新技法",
+   "research_topics": [
+    "log4j2 WAF bypass new technique"
+   ]
+  },
+  {
+   "scenario": "all",
+   "signal": "知识库覆盖不足（15%）",
+   "suggestion": "知识库大量原语未实测，先探索未用原语再决定是否检索",
+   "research_topics": [],
+   "unexplored_primitives": [
+    "cmdi:lexical:ansi_c_quoting",
+    "cmdi:lexical:backslash",
+    "cmdi:lexical:default_value_split",
+    "cmdi:lexical:empty_cmd_subst",
+    "cmdi:lexical:empty_special_param",
+    "cmdi:lexical:ifs",
+    "cmdi:lexical:ifs_variants",
+    "cmdi:lexical:octal_ansi"
+   ]
+  },
+  {
+   "scenario": "all",
+   "signal": "知识库覆盖不足（22%）",
+   "suggestion": "知识库大量原语未实测，先探索未用原语再决定是否检索",
+   "research_topics": [],
+   "unexplored_primitives": [
+    "cmdi:lexical:ansi_c_quoting",
+    "cmdi:lexical:default_value_split",
+    "cmdi:lexical:ifs_variants",
+    "cmdi:lexical:octal_ansi",
+    "cmdi:lexical:redir_space",
+    "cmdi:semantic:decode_exec",
+    "cmdi:semantic:env_assign_cmd",
+    "cmdi:semantic:env_char_extract"
+   ]
+  },
+  {
+   "scenario": "cmdi",
+   "signal": "停滞（两轮通过数无提升）",
+   "suggestion": "该方向已榨干，换方向或联网检索新技法",
+   "research_topics": [
+    "cmdi WAF bypass new technique"
+   ]
+  },
+  {
+   "scenario": "xss",
+   "signal": "接近全拦（5% 过）",
+   "suggestion": "当前技法几乎全被拦，建议检索 xss 语义引擎盲区",
+   "research_topics": [
+    "xss semantic WAF blindspot"
+   ]
+  },
+  {
+   "scenario": "all",
+   "signal": "知识库覆盖不足（29%）",
+   "suggestion": "知识库大量原语未实测，先探索未用原语再决定是否检索",
+   "research_topics": [],
+   "unexplored_primitives": [
+    "cmdi:lexical:ansi_c_quoting",
+    "cmdi:lexical:default_value_split",
+    "cmdi:lexical:ifs_variants",
+    "cmdi:lexical:octal_ansi",
+    "cmdi:lexical:redir_space",
+    "cmdi:semantic:decode_exec",
+    "cmdi:semantic:env_assign_cmd",
+    "cmdi:semantic:env_char_extract"
+   ]
+  },
+  {
+   "scenario": "all",
+   "signal": "知识库覆盖不足（33%）",
+   "suggestion": "知识库大量原语未实测，先探索未用原语再决定是否检索",
+   "research_topics": [],
+   "unexplored_primitives": [
+    "cmdi:lexical:ansi_c_quoting",
+    "cmdi:lexical:default_value_split",
+    "cmdi:lexical:ifs_variants",
+    "cmdi:lexical:octal_ansi",
+    "cmdi:lexical:redir_space",
+    "cmdi:semantic:decode_exec",
+    "cmdi:semantic:env_assign_cmd",
+    "cmdi:semantic:env_char_extract"
+   ]
+  },
+  {
+   "scenario": "all",
+   "signal": "知识库覆盖不足（38%）",
+   "suggestion": "知识库大量原语未实测，先探索未用原语再决定是否检索",
+   "research_topics": [],
+   "unexplored_primitives": [
+    "cmdi:lexical:ansi_c_quoting",
+    "cmdi:lexical:default_value_split",
+    "cmdi:lexical:ifs_variants",
+    "cmdi:lexical:octal_ansi",
+    "cmdi:lexical:redir_space",
+    "cmdi:semantic:decode_exec",
+    "cmdi:semantic:env_assign_cmd",
+    "cmdi:semantic:env_char_extract"
+   ]
+  },
+  {
+   "scenario": "all",
+   "signal": "知识库覆盖不足（39%）",
+   "suggestion": "知识库大量原语未实测，先探索未用原语再决定是否检索",
+   "research_topics": [],
+   "unexplored_primitives": [
+    "cmdi:lexical:ansi_c_quoting",
+    "cmdi:lexical:default_value_split",
+    "cmdi:lexical:ifs_variants",
+    "cmdi:lexical:octal_ansi",
+    "cmdi:lexical:redir_space",
+    "cmdi:semantic:decode_exec",
+    "cmdi:semantic:env_assign_cmd",
+    "cmdi:semantic:env_char_extract"
+   ]
+  },
+  {
+   "scenario": "all",
+   "signal": "知识库覆盖不足（42%）",
+   "suggestion": "知识库大量原语未实测，先探索未用原语再决定是否检索",
+   "research_topics": [],
+   "unexplored_primitives": [
+    "cmdi:lexical:ansi_c_quoting",
+    "cmdi:lexical:default_value_split",
+    "cmdi:lexical:ifs_variants",
+    "cmdi:lexical:octal_ansi",
+    "cmdi:lexical:redir_space",
+    "cmdi:semantic:decode_exec",
+    "cmdi:semantic:env_assign_cmd",
+    "cmdi:semantic:env_char_extract"
+   ]
+  },
+  {
+   "scenario": "all",
+   "signal": "知识库覆盖不足（44%）",
+   "suggestion": "知识库大量原语未实测，先探索未用原语再决定是否检索",
+   "research_topics": [],
+   "unexplored_primitives": [
+    "cmdi:lexical:ansi_c_quoting",
+    "cmdi:lexical:default_value_split",
+    "cmdi:lexical:ifs_variants",
+    "cmdi:lexical:octal_ansi",
+    "cmdi:lexical:redir_space",
+    "cmdi:semantic:decode_exec",
+    "cmdi:semantic:env_assign_cmd",
+    "cmdi:semantic:env_char_extract"
+   ]
+  },
+  {
+   "scenario": "xss",
+   "signal": "全拦（74 测 0 过）",
+   "suggestion": "纯语义层当前全部被拦，需联网检索冷门技法扩充知识库",
+   "research_topics": [
+    "xss 绕 WAF 冷门技法 2024-2025",
+    "cloud WAF xss bypass"
+   ]
+  },
+  {
+   "scenario": "all",
+   "signal": "知识库覆盖不足（48%）",
+   "suggestion": "知识库大量原语未实测，先探索未用原语再决定是否检索",
+   "research_topics": [],
+   "unexplored_primitives": [
+    "cmdi:lexical:ansi_c_quoting",
+    "cmdi:lexical:default_value_split",
+    "cmdi:lexical:ifs_variants",
+    "cmdi:lexical:octal_ansi",
+    "cmdi:lexical:redir_space",
+    "cmdi:semantic:decode_exec",
+    "cmdi:semantic:env_assign_cmd",
+    "cmdi:semantic:env_char_extract"
+   ]
+  },
+  {
+   "scenario": "all",
+   "signal": "知识库覆盖不足（49%）",
+   "suggestion": "知识库大量原语未实测，先探索未用原语再决定是否检索",
+   "research_topics": [],
+   "unexplored_primitives": [
+    "cmdi:lexical:ansi_c_quoting",
+    "cmdi:lexical:default_value_split",
+    "cmdi:lexical:ifs_variants",
+    "cmdi:lexical:octal_ansi",
+    "cmdi:lexical:redir_space",
+    "cmdi:semantic:decode_exec",
+    "cmdi:semantic:env_assign_cmd",
+    "cmdi:semantic:env_char_extract"
+   ]
+  },
+  {
+   "scenario": "upload",
+   "signal": "停滞（两轮通过数无提升）",
+   "suggestion": "该方向已榨干，换方向或联网检索新技法",
+   "research_topics": [
+    "upload WAF bypass new technique"
+   ]
+  },
+  {
+   "scenario": "xss",
+   "signal": "全拦（35 测 0 过）",
+   "suggestion": "纯语义层当前全部被拦，需联网检索冷门技法扩充知识库",
+   "research_topics": [
+    "xss 绕 WAF 冷门技法 2024-2025",
+    "cloud WAF xss bypass"
+   ]
+  }
+ ],
+ "corpus_curation": {
+  "applied_at": "2026-08-07",
+  "note": "样本库已整理为只保留远程实测通过(HTTP200/waf_decision=passed)的样本: 970→205 (sqli 191, cmdi 13, log4j2 1)",
+  "archived": "samples/_archive_20260807/ (removed_samples.jsonl + removed_tests.jsonl)",
+  "impact": "dimension_stats/history 为整理前的探索记忆(含已删的 blocked 样本); 后续 run_round 会基于当前 tests 重建"
+ }
 }

@@ -63,10 +63,10 @@ def _insert_split(payload, kw, idx, joiner):
 
 
 def t_comment_split(payload, scenario):
-    """UN/**/ION — 关键字注释拆分。"""
-    if scenario not in ("sqli", "xss"):
+    """UN/**/ION — 关键字注释拆分（仅 sqli；XSS 的属性名不能用 /**/ 拆分，会失效）。"""
+    if scenario != "sqli":
         return None
-    kw, idx = _find_keyword(payload, SQL_KEYWORDS if scenario == "sqli" else XSS_HANDLERS, case_insensitive=True)
+    kw, idx = _find_keyword(payload, SQL_KEYWORDS, case_insensitive=True)
     if kw is None or len(kw) < 3:
         return None
     return _insert_split(payload, kw, idx, "/**/")
@@ -150,6 +150,13 @@ def t_quote_split(payload, scenario):
     kw, idx = _find_keyword(payload, kws, case_insensitive=(scenario == "sqli"))
     if kw is None or len(kw) < 2:
         return None
+    if scenario == "cmdi":
+        # shell 引号拆分：包裹中间字符 → c'a't（c'at / ca't 是未闭合引号，语法错误）
+        mid = max(1, len(kw) // 2)
+        if mid >= len(kw):
+            return None
+        split = kw[:mid] + "'" + kw[mid] + "'" + kw[mid + 1:]
+        return payload[:idx] + split + payload[idx + len(kw):]
     return _insert_split(payload, kw, idx, "'")
 
 
@@ -173,9 +180,14 @@ def t_ifs_sub(payload, scenario):
 
 
 def t_logical_chain(payload, scenario):
-    """无害命令稀释：:;true && <payload>。"""
+    """无害命令稀释：:;true <payload>（payload 开头是分隔符）或 :;true && <payload>。
+
+    不能无脑 `:;true && `：若 payload 以 ;|& 开头会拼成 `true && ;`（语法错误）。
+    """
     if scenario != "cmdi":
         return None
+    if payload[:1] in (";", "|", "&"):
+        return ":;true " + payload
     return ":;true && " + payload
 
 
@@ -203,6 +215,106 @@ def t_tag_case(payload, scenario):
     return None
 
 
+# ── 组合派生：全关键字 / 多层矩阵（把单技法变换放大成深度攻击）─────────
+
+def _kw_pattern(kws, min_len=3):
+    """构建单遍正则（长关键字优先，避免子串误命中），一次替换所有出现。"""
+    import re
+    ordered = sorted((k for k in kws if len(k) >= min_len), key=len, reverse=True)
+    if not ordered:
+        return None
+    return re.compile("(" + "|".join(re.escape(k) for k in ordered) + ")", re.IGNORECASE)
+
+
+def _split_occurrences(payload, kws, joiner, min_len=3):
+    """对 payload 中所有命中关键字做中点拆分（单遍，不重复匹配插入内容）。"""
+    pat = _kw_pattern(kws, min_len)
+    if pat is None:
+        return None
+    def _repl(m):
+        g = m.group(0)
+        mid = max(1, len(g) // 2)
+        return g[:mid] + joiner + g[mid:]
+    out = pat.sub(_repl, payload)
+    return out if out != payload else None
+
+
+def t_comment_split_all(payload, scenario):
+    """UN/**/ION/**/SEL/**/ECT — 所有关键字注释拆分（深度，仅 sqli）。"""
+    if scenario != "sqli":
+        return None
+    return _split_occurrences(payload, SQL_KEYWORDS, "/**/")
+
+
+def t_version_comment_all(payload, scenario):
+    """/*!50000UNION*//*!50000SELECT*/ — 所有关键字版本注释包裹。"""
+    if scenario != "sqli":
+        return None
+    pat = _kw_pattern(SQL_KEYWORDS)
+    if pat is None:
+        return None
+    out = pat.sub(lambda m: "/*!50000%s*/" % m.group(0), payload)
+    return out if out != payload else None
+
+
+def t_double_write_all(payload, scenario):
+    """UNIunionONSELselectECT — 所有关键字双重写。"""
+    if scenario != "sqli":
+        return None
+    pat = _kw_pattern(SQL_KEYWORDS)
+    if pat is None:
+        return None
+    out = pat.sub(lambda m: m.group(0) + m.group(0).lower(), payload)
+    return out if out != payload else None
+
+
+def t_quote_split_all(payload, scenario):
+    """UN'I''ON' SEL'ECT' — 所有关键字引号拆分。"""
+    if scenario == "sqli":
+        return _split_occurrences(payload, SQL_KEYWORDS, "'")
+    if scenario == "cmdi":
+        return _split_occurrences(payload, CMDI_COMMANDS, "'", min_len=2)
+    return None
+
+
+def t_blank_matrix(payload, scenario):
+    """空格 → %0a/%09/%0b/%a0 轮换分隔符矩阵（深度 whitespace）。"""
+    if scenario != "sqli" or " " not in payload:
+        return None
+    seps = ["%0a", "%09", "%0b", "%a0", "%0c"]
+    out, i = [], 0
+    for ch in payload:
+        if ch == " ":
+            out.append(seps[i % len(seps)])
+            i += 1
+        else:
+            out.append(ch)
+    return "".join(out) if out != payload else None
+
+
+def t_compose_version_quote(payload, scenario):
+    """/*!50000UN'ION*/ — 版本注释 × 引号拆分组合（配方 stack 示例）。"""
+    if scenario != "sqli":
+        return None
+    kw, idx = _find_keyword(payload, ["UNION", "SELECT", "FROM", "WHERE"], case_insensitive=True)
+    if kw is None or len(kw) < 4:
+        return None
+    mid = max(1, len(kw) // 2)
+    return payload[:idx] + "/*!50000%s*/" % (kw[:mid] + "'" + kw[mid:]) + payload[idx + len(kw):]
+
+
+def t_compose_double_quote(payload, scenario):
+    """UNIunion'ON' — 双写 × 引号拆分组合。"""
+    if scenario != "sqli":
+        return None
+    kw, idx = _find_keyword(payload, ["UNION", "SELECT", "FROM"], case_insensitive=True)
+    if kw is None or len(kw) < 4:
+        return None
+    mid = max(1, len(kw) // 2)
+    first, rest = kw[:mid], kw[mid:]
+    return payload[:idx] + first + first.lower() + "'" + rest + payload[idx + len(kw):]
+
+
 # ── 目录 ──────────────────────────────────────────────────────
 
 TRANSFORMS = [
@@ -217,8 +329,15 @@ TRANSFORMS = [
     {"id": "backslash_split",   "layer": "lexical",   "scenarios": ["cmdi"],          "fn": t_backslash_split},
     {"id": "ifs_sub",           "layer": "lexical",   "scenarios": ["cmdi"],          "fn": t_ifs_sub},
     {"id": "logical_chain",     "layer": "syntactic", "scenarios": ["cmdi"],          "fn": t_logical_chain},
-    {"id": "handler_split",     "layer": "lexical",   "scenarios": ["xss"],           "fn": t_handler_split},
     {"id": "tag_case",          "layer": "lexical",   "scenarios": ["xss"],           "fn": t_tag_case},
+    # 组合派生（多层/全关键字）
+    {"id": "comment_split_all", "layer": "lexical",   "scenarios": ["sqli", "xss"],   "fn": t_comment_split_all},
+    {"id": "version_comment_all", "layer": "lexical", "scenarios": ["sqli"],          "fn": t_version_comment_all},
+    {"id": "double_write_all",  "layer": "lexical",   "scenarios": ["sqli"],          "fn": t_double_write_all},
+    {"id": "quote_split_all",   "layer": "lexical",   "scenarios": ["sqli", "cmdi"],  "fn": t_quote_split_all},
+    {"id": "blank_matrix",      "layer": "lexical",   "scenarios": ["sqli"],          "fn": t_blank_matrix},
+    {"id": "compose_version_quote", "layer": "lexical", "scenarios": ["sqli"],        "fn": t_compose_version_quote},
+    {"id": "compose_double_quote",  "layer": "lexical", "scenarios": ["sqli"],        "fn": t_compose_double_quote},
 ]
 
 TRANSFORM_MAP = {t["id"]: t for t in TRANSFORMS}
@@ -268,8 +387,12 @@ def _variant_record(seed, new_payload, tid, layer):
     return rec
 
 
-def derive(seeds, max_depth=2, max_variants=None):
-    """种子列表 → 派生变体列表（去重）。"""
+def derive(seeds, max_depth=3, max_variants=None):
+    """种子列表 → 派生变体列表（去重）。
+
+    迭代链式组合（深度 max_depth）：单变换 → 逐层叠加，注释累积到 mechanism。
+    用"全关键字/组合"变换可一次性派生出多层矩阵攻击，而非单技法换皮。
+    """
     out = []
     seen = set()
     for seed in seeds:
@@ -286,17 +409,24 @@ def derive(seeds, max_depth=2, max_variants=None):
             v = apply_transform(t["id"], seed["payload"]["raw"], scenario)
             if v:
                 variants.append(_variant_record(seed, v, t["id"], t["layer"]))
-        # 链式组合（深度2）：先取单变换变体，再对它们施加同层/跨层第二变换
+        # 迭代链式组合：基于前一深度变体再叠加变换（允许同变换作用于不同位置）
         if max_depth >= 2:
-            chained = []
-            for v1 in variants:
-                for t2 in TRANSFORMS:
-                    if scenario not in t2["scenarios"] or t2["id"] == v1["generation"]["template_ids"][-1]:
-                        continue
-                    v2 = apply_transform(t2["id"], v1["payload"]["raw"], scenario)
-                    if v2 and v2 not in [x["payload"]["raw"] for x in chained]:
-                        chained.append(_variant_record(seed, v2, t2["id"], t2["layer"]))
-            variants.extend(chained)
+            frontier = variants[:40]
+            for _ in range(2, max_depth + 1):
+                nxt = []
+                for v1 in frontier:
+                    for t2 in TRANSFORMS:
+                        if scenario not in t2["scenarios"]:
+                            continue
+                        v2 = apply_transform(t2["id"], v1["payload"]["raw"], scenario)
+                        if not v2 or any(x["payload"]["raw"] == v2 for x in variants):
+                            continue
+                        chained = _variant_record(v1, v2, t2["id"], t2["layer"])
+                        variants.append(chained)
+                        nxt.append(chained)
+                frontier = nxt[:40]
+                if not frontier:
+                    break
         for v in variants:
             if v["sample_id"] in seen:
                 continue

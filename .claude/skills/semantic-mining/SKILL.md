@@ -26,6 +26,8 @@ allowed-tools:
 2. **禁止无机制凑数**：仅大小写/末尾空格/重复参数这类"换皮不变质"的纯凑数不入库。
 3. **只做语义层，不碰编码**：编码变形（URL/Base64/Hex/Unicode）归未来 encoding-bypass skill。
 4. **区分场景但别被框死**：五场景各有生成方向（见下表），但场景内不限制攻击路径，跨场景手法自由移植。
+5. **完整攻击优先于单技法变换**：默认产出"目标明确 + 多层组合"的完整攻击（从 `组合配方` 出发改造），不是 `SELECT 1,2,3` 式计数探针换皮。单技法探针只用于确认某个原语单独的有效性。
+6. **结构新颖性优先（治本）**：每轮先读结构覆盖报告（`lib/structures.py` 的 `novelty_gaps`），设计目标 = 零通过/低覆盖/boundary 结构。**重复已 confirmed 结构 = 低质**。可用 `python3 -c "from lib import structures; ..."` 快速看当前哪些结构垄断、哪些是缺口。
 
 ## 场景生成方向
 
@@ -51,14 +53,28 @@ allowed-tools:
 ### Step 1 — 生成（核心，AI 智力密集）
 两层生成，产出 `probes.jsonl`：
 
-**Layer1 — AI 知识驱动**（你写，质量来源）：
-- 从 advanced_bypass.md 该场景章节 + skill_state 的 pending_directions 选方向
+**Layer1 — AI 知识驱动（攻击设计优先）**（你写，质量来源）：
+- **先设计完整攻击，再标注原语，而不是"挑个技法套到模板上"**。起手式是"构造一个从 flags 表读出 flag 的注入/命令/脚本"，然后决定用什么组合、什么上下文，最后把用到的原语**事后**标注进 `mechanism.primitives`。
+- **攻击类别横切（必须）**：每批至少覆盖 4 种攻击类别，**禁止收敛在单一形态**（前几轮全 UNION SELECT 就是没横切）。各场景类别清单：
+  - sqli = UNION/集合 · 布尔盲注 · 时间盲注 · 报错注入 · 堆叠查询 · 预处理 · 无列名 · 文件读写 · 宽字节 · sys库
+  - cmdi = 读文件 · 命令执行 · 外带 · 环境变量 · 解释器 · 进程替换 · 时间探测
+  - xss = 标签/事件 · mXSS · DOM遮蔽 · 模板上下文 · 协议 · CSS注入 · meta/base · 两阶段
+  - upload = 扩展名 · 内容混淆 · 配置注入 · multipart解析器差异
+  - log4j2 = JNDI · 非JNDI泄露 · 嵌套外带 · 大小写/Unicode折叠
+- **未测原语优先**：生成前查该场景 KB 未测原语（knowledge_gaps / grep advanced_bypass.md），优先补测新类别，**而不是继续深挖已 confirmed 的**（深挖是保量，横切才是发散）。
+- **先读结构覆盖（治本纪律）**：生成前必跑 `python3 -c "from lib import structures; ..."` 读结构覆盖报告，设计目标 = `novelty_gaps` 的 **zero_pass / low_coverage / boundary** 结构，禁止只深化已 confirmed 结构。结构新颖性是第一目标，通过率是第二。
+- **默认多层组合**：≥2 个原语、≥2 个层；单技法变换只作对照补充，不作为主力
 - **优先展开**：confirmed 技法（深度+跨层双轴）、boundary 技法（熵最高）、未测原语
 - **跳过**：dead 原语（除非有跨层组合的新理由）
-- 每个 payload 必须满足四条纪律；reason ≥20 字符
+- 每个 payload 必须满足四条纪律；reason ≥20 字符；**能说清"WAF 看到什么、解析器做什么、为什么漏"**
 - 每批 10-30 条 AI 探针（控制质量，不要一次堆几百条粗制滥造）
 
-**Layer2 — 代码派生**（机械，交给脚本）：run_round.py 会对你的探针自动施加语义保持变换批量派生变体。
+**Layer2 — 代码派生**（机械，交给脚本）：run_round.py 会对你的探针自动施加语义保持变换批量派生变体（含多层组合变换）。
+
+**Layer2.5 — 语句合成器（结构性生成，必开）**：`run_round.py --compose N` 从"语句骨架 × 语法部件"（`lib/composer.py`）自动组合**全新语句**，不依赖手写种子。
+- **为什么必须有它**：Layer-2 只能对已有 payload 做词法突变，永远无法创造新语句（这就是"样本全是一句话变体"的根因）。新颖性必须由结构性生成产生，不能靠手写种子碰运气。
+- **已验证**：composer 自动生成的 `IS_FREE_LOCK('x')` 锁函数盲注突破 114 条（从未手写过）；`GET_LOCK`/`ST_X`/`JSON_KEYS`/`@@version`/`TABLE`/`VALUES`/`CTE`/`HANDLER`/`DO` 等新语句类型系统化覆盖。
+- **每轮建议**：`--compose 30-40` 常开，与 Layer-1 手写种子并用。
 
 ```bash
 # 写探针到文件（每行一个 JSON，字段见下）
@@ -79,7 +95,9 @@ python3 scripts/run_round.py --scenario <scenario> --input probes.jsonl --name r
 ### Step 2 — 执行 + 学习（机械，run_round.py 完成）
 脚本自动：入库去重 → Layer2 派生 → 远程实测（并发3+限速）→ 学习回写（维度统计/confirmed/dead/pending/WAF UUID 追踪）→ 知识缺口自检（knowledge_gaps）→ 输出摘要。
 
-**成功样本迭代（skill 变强）**：对已通过的样本做同义近义迭代派生新表达——`--iterate-synonyms N` 取前 N 个已成功样本，按 `knowledge/synonyms.json` 同义词表 + 混淆加深派生新候选，再实测。已实测 sqli 同义迭代一轮 124/296 通过（AND→&&、=→LIKE 全 100%）。
+**成功样本迭代（skill 变强）**：对已通过的样本做两类迭代——
+- **同义近义迭代**（机械）：`--iterate-synonyms N` 按 `knowledge/synonyms.json` 换词派生（AND→&&、=→LIKE）。已实测 sqli 一轮 124/296 通过。
+- **AI 重构**（智力）：取已通过样本，**保留绕过机制、重构整体形态**——换结构、叠加新层、套不同上下文（如把 `1 UNIONunion SELECT 1,2,3` 重构为 `1/*!50000UNI''ON*/%0aSEL/**/ECT 1,(SELECT flag FROM flags),3-- -`）。同一条有效机制由此放大成一批完全不同字面的攻击，而不是近义词微调。
 
 你只需要读摘要：`stats`（passed/blocked）、`top_dimensions`（通过率排序）、`pending_directions`、`knowledge_gaps`。
 

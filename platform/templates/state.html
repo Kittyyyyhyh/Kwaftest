@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Skill 状态{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2>🧠 Skill 学习状态</h2>
+  <p>语义挖掘 Skill v2 · 数据驱动学习循环</p>
+</div>
+
+{% if state.waf_update_warning %}
+<div class="banner warn">⚠️ {{ state.waf_update_warning }}</div>
+{% endif %}
+
+<div class="kpis">
+  <div class="kpi"><div class="label">🆔 WAF UUID</div><div class="value amber">{{ state.waf.uuid_count }}</div><div class="sub">拦截特征去重</div></div>
+  <div class="kpi"><div class="label">📅 最近实测</div><div class="value accent" style="font-size:20px">{{ state.waf.last_run[:10] if state.waf.last_run else '—' }}</div><div class="sub">WAF 目标</div></div>
+  <div class="kpi"><div class="label">🧩 知识缺口</div><div class="value">{{ state.knowledge_gaps|length }}</div><div class="sub">待扩充信号</div></div>
+  <div class="kpi"><div class="label">🧠 已探索场景</div><div class="value">{{ state.scenarios|length }}</div><div class="sub">sqli·cmdi·xss·log4j2</div></div>
+</div>
+
+<div class="grid cols-2">
+  {% for sc, s in state.scenarios.items() %}
+  <div class="card">
+    <h3>
+      <span class="badge scenario-{{ sc }}">{{ sc }}</span>
+      <span class="hint">第 {{ s.round }} 轮 · {{ s.last_run[:10] }}</span>
+    </h3>
+    <div class="flex wrap gap-10 mb-16">
+      <span class="badge tier-confirmed">✓ {{ s.tiers.confirmed }} confirmed</span>
+      <span class="badge tier-boundary">◎ {{ s.tiers.boundary }} boundary</span>
+      <span class="badge tier-exploring">◇ {{ s.tiers.exploring }} exploring</span>
+      {% if s.tiers.dead %}<span class="badge tier-dead">✗ {{ s.tiers.dead }} dead</span>{% endif %}
+    </div>
+
+    {% if s.confirmed_techniques %}
+    <h4>✅ 已确认技法</h4>
+    <div class="mb-16">{% for p in s.confirmed_techniques %}<span class="tag">{{ p }}</span>{% endfor %}</div>
+    {% endif %}
+
+    {% if s.dead_primitives %}
+    <h4>✗ 已剪枝（dead）</h4>
+    <div class="mb-16">{% for p in s.dead_primitives %}<span class="tag">{{ p }}</span>{% endfor %}</div>
+    {% endif %}
+
+    {% if s.pending_directions %}
+    <h4>🧭 待探索方向</h4>
+    <ul class="clean">
+      {% for d in s.pending_directions %}
+      <li>{{ d.desc }}<span class="prio">优先 {{ '%.2f'|format(d.priority) }}</span></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if s.history %}
+    <h4 class="mt-16">📈 轮次历史</h4>
+    <div class="flex wrap gap-10">
+      {% for h in s.history %}
+      <span class="tag">R{{ h.round }} · {{ h.tested }} 测</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+{% if state.knowledge_gaps %}
+<div class="card mt-24">
+  <h3>知识缺口信号</h3>
+  <table class="tbl">
+    <thead><tr><th>场景</th><th>信号</th><th>建议</th><th>检索主题</th></tr></thead>
+    <tbody>
+      {% for g in state.knowledge_gaps %}
+      <tr>
+        <td><span class="badge scenario-{{ g.scenario }}">{{ g.scenario }}</span></td>
+        <td><span class="badge tier-danger">{{ g.signal }}</span></td>
+        <td class="muted">{{ g.suggestion }}</td>
+        <td class="mono faint">{% for t in g.research_topics %}{{ t }}<br>{% endfor %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if state.corpus_curation %}
+<div class="banner curate mt-24">📌 <span><b>样本库整理说明</b> — {{ state.corpus_curation.note }}</span></div>
+{% endif %}
+
+<details class="collapse mt-24">
+  <summary>查看原始 JSON</summary>
+  <pre class="raw">{{ raw_json }}</pre>
+</details>
+{% endblock %}
