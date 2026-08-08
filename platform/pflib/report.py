@@ -1,8 +1,7 @@
-"""统计报表 — 已确认样本集构成 / 原语覆盖 / 有效样本 / WAF UUID。
+"""统计报表 — 样本库全量构成 / 原语覆盖 / 有效样本 / WAF UUID。
 
-注意：corpus 经整理后只保留"远程实测通过"的样本，因此绕过率恒为 100%。
-本报表以"已确认样本集"为口径呈现构成（场景/类别/原语覆盖/有效样本），
-不再表述为一次测试扫描的通过率。
+口径：corpus 为 AI 生成 → 远程实测的全量记录（含被拦样本）。
+整体通过率 = 实测通过样本 / 已实测样本，按真实判定计算，如实呈现。
 """
 from collections import Counter, defaultdict
 
@@ -88,18 +87,19 @@ def build_stats(cfg) -> dict:
 
 def render_markdown(stats) -> str:
     L = []
-    L.append("# WAF 语义测试样本集（已确认：远程实测全部通过）\n")
+    L.append("# WAF 语义测试样本集（远程实测全量记录）\n")
     L.append("## 总览\n")
     L.append("| 指标 | 值 |\n|---|---|")
     L.append("| 样本总数 | %d |" % stats["total_samples"])
     L.append("| 唯一 payload 数 | %d |" % stats["unique_payloads"])
     L.append("| 已实测 | %d |" % stats["tested"])
-    L.append("| 已确认通过(WAF放行) | %d |" % stats["passed"])
-    L.append("| **样本集通过率** | **%.1f%%** |" % stats["confirmed_rate_pct"])
+    L.append("| 已通过(WAF放行) | %d |" % stats["passed"])
+    L.append("| 被拦截 | %d |" % stats["blocked"])
+    L.append("| **整体通过率** | **%.1f%%** |" % stats["confirmed_rate_pct"])
     L.append("| 已确认技法 | %d |" % stats["confirmed_techniques"])
     L.append("| 不同 WAF UUID | %d |" % stats["distinct_waf_uuids"])
-    L.append("\n> 口径：corpus 只保留远程实测通过（HTTP 200 / waf_decision=passed）的样本，"
-             "通过率恒为 100%。本报表描述样本集构成，不再是一次测试扫描的通过率统计。\n")
+    L.append("\n> 口径：corpus 为 AI 生成 → 远程实测全量记录（HTTP 200 = 放行 / 403 = 拦截），"
+             "被拦样本如实入库。整体通过率 = 通过样本 / 已实测样本，按真实判定计算，非 100%。\n")
     L.append("\n## 场景维度\n")
     L.append("| 场景 | 样本数 | 已确认通过 |\n|---|---|---|")
     for sc, v in sorted(stats["by_scenario"].items()):

